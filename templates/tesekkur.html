@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block baslik %}Teşekkürler{% endblock %}
+{% block icerik %}
+
+<div class="giris-kutu" style="text-align: center;">
+  <div style="font-size: 60px; margin-bottom: 10px;">✅</div>
+  <h1>Teşekkürler!</h1>
+  <p class="aciklama">
+    "<strong>{{ anket.baslik }}</strong>" anketine katıldığınız için teşekkür ederiz.
+    Cevaplarınız anonim olarak kaydedildi.
+  </p>
+
+  <a href="{{ url_for('ogrenci_giris') }}" class="btn birincil tam" style="margin-top: 20px;">
+    Başka Bir Ankete Katıl
+  </a>
+</div>
+
+{% endblock %}
