@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block baslik %}Giriş — PDR Anket{% endblock %}
+{% block icerik %}
+
+<div class="giris-kutu">
+  <h1>🔐 Öğretmen Girişi</h1>
+  <p class="aciklama">Panele erişmek için giriş yapın.</p>
+
+  <form method="post">
+    <label>Kullanıcı Adı</label>
+    <input type="text" name="kullanici" required autofocus>
+
+    <label>Şifre</label>
+    <input type="password" name="sifre" required>
+
+    <button type="submit" class="btn birincil tam">Giriş Yap</button>
+  </form>
+
+  <p class="kucuk-not">
+    <a href="{{ url_for('ogrenci_giris') }}">Öğrenci misiniz? Anket doldurmak için tıklayın →</a>
+  </p>
+</div>
+
+{% endblock %}
