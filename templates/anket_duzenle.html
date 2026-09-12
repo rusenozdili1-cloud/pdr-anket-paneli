@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block baslik %}{{ anket.baslik }} — Düzenle{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>✏️ {{ anket.baslik }}</h1>
+  <a href="{{ url_for('panel') }}" class="btn">← Anketler</a>
+</div>
+
+{% if anket.aciklama %}
+  <p class="anket-aciklama">{{ anket.aciklama }}</p>
+{% endif %}
+
+<!-- Anket Kodu ve Durum -->
+<div class="bilgi-kutu">
+  <div>
+    <span class="etiket-baslik">Anket Kodu</span>
+    <div class="kod-buyuk">{{ anket.kod }}</div>
+    <small>Bu kodu öğrencilerle paylaşın. Öğrenciler <strong>/ogrenci</strong> adresinden bu kodu girerek ankete ulaşır.</small>
+  </div>
+  <div>
+    <span class="etiket-baslik">Durum</span>
+    {% if anket.yayinda %}
+      <span class="etiket yesil">Yayında</span>
+    {% else %}
+      <span class="etiket gri">Taslak</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Yayınla / Kapat -->
+<form method="post" action="{{ url_for('anket_yayinla', anket_id=anket.id) }}" style="margin-bottom: 24px;">
+  {% if anket.yayinda %}
+    <button type="submit" class="btn tehlike">⏸ Anketi Kapat</button>
+  {% else %}
+    <button type="submit" class="btn birincil">▶ Anketi Yayınla</button>
+  {% endif %}
+</form>
+
+<!-- Yeni Soru Ekle -->
+<div class="form-kart">
+  <h3>➕ Yeni Soru Ekle</h3>
+  <form method="post">
+    <label>Soru Tipi</label>
+    <select name="tip" id="soru-tipi" onchange="tipDegisti()">
+      <option value="coktan">Çoktan Seçmeli</option>
+      <option value="likert">Likert (1-5)</option>
+      <option value="metin">Açık Uçlu (Yazılı)</option>
+    </select>
+
+    <label>Soru Metni *</label>
+    <textarea name="metin" required placeholder="Örn: Okulda kendini güvende hissediyor musun?"></textarea>
+
+    <div id="secenek-alani">
+      <label>Seçenekler (her satıra bir seçenek)</label>
+      <textarea name="secenekler" placeholder="Evet&#10;Hayır&#10;Kararsızım"></textarea>
+    </div>
+
+    <button type="submit" class="btn birincil tam">Soruyu Ekle</button>
+  </form>
+</div>
+
+<!-- Mevcut Sorular -->
+<h3 style="margin-top: 30px;">📝 Sorular ({{ sorular|length }})</h3>
+
+{% if sorular %}
+  <div class="soru-listesi">
+    {% for s in sorular %}
+      <div class="soru-kart">
+        <div class="soru-ust">
+          <span class="soru-no">S{{ s.sira }}</span>
+          <span class="etiket gri">{{ s.tip }}</span>
+        </div>
+        <p class="soru-metin">{{ s.metin }}</p>
+        {% if s.secenekler %}
+          <ul class="secenek-listesi">
+            {% for sec in s.secenekler.split('\n') %}
+              {% if sec.strip() %}<li>{{ sec.strip() }}</li>{% endif %}
+            {% endfor %}
+          </ul>
+        {% endif %}
+        <form method="post" action="{{ url_for('soru_sil', soru_id=s.id) }}"
+              onsubmit="return confirm('Bu soruyu silmek istediğinize emin misiniz?');">
+          <button type="submit" class="btn kucuk tehlike">🗑️ Sil</button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="bos-durum">
+    <p>Henüz soru eklemediniz. Yukarıdaki formdan ilk soruyu ekleyin.</p>
+  </div>
+{% endif %}
+
+<script>
+function tipDegisti() {
+  var tip = document.getElementById('soru-tipi').value;
+  var alan = document.getElementById('secenek-alani');
+  if (tip === 'metin') {
+    alan.style.display = 'none';
+  } else if (tip === 'likert') {
+    alan.style.display = 'block';
+    document.querySelector('[name="secenekler"]').value = '1 - Kesinlikle Katılmıyorum\n2 - Katılmıyorum\n3 - Kararsızım\n4 - Katılıyorum\n5 - Kesinlikle Katılıyorum';
+  } else {
+    alan.style.display = 'block';
+  }
+}
+tipDegisti();
+</script>
+
+{% endblock %}
