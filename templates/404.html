@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block baslik %}Sayfa Bulunamadı{% endblock %}
+{% block icerik %}
+
+<div class="giris-kutu" style="text-align: center;">
+  <div style="font-size: 60px; margin-bottom: 10px;">🔍</div>
+  <h1>404 — Sayfa Bulunamadı</h1>
+  <p class="aciklama">Aradığınız sayfa mevcut değil veya taşınmış olabilir.</p>
+  <a href="{{ url_for('index') }}" class="btn birincil tam" style="margin-top: 20px;">Ana Sayfaya Dön</a>
+</div>
+
+{% endblock %}
