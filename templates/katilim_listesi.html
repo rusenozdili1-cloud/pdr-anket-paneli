@@ -21,4 +21,19 @@
   <tbody>
     {% for o in liste %}
       <tr>
-        <td><strong>{{ o.ogrenci_no }}</strong></
+        <td><strong>{{ o.ogrenci_no }}</strong></td>
+        <td>{{ o.ad_soyad }}</td>
+        <td>
+          {% if o.katildi %}
+            <span class="etiket yesil">Katıldı</span>
+          {% else %}
+            <span class="etiket gri">Katılmadı</span>
+          {% endif %}
+        </td>
+        <td>{{ o.katilma or "—" }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
