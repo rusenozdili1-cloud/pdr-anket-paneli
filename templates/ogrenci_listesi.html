@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block baslik %}Öğrenci Listesi — {{ anket.baslik }}{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>👥 Öğrenci Listesi</h1>
+  <a href="{{ url_for('anket_duzenle', anket_id=anket.id) }}" class="btn">← Ankete Dön</a>
+</div>
+
+<p class="anket-aciklama">{{ anket.baslik }} — {{ liste|length }} öğrenci</p>
+
+{% if liste %}
+  <table class="tablo">
+    <thead>
+      <tr>
+        <th>Öğrenci No</th>
+        <th>Ad Soyad</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in liste %}
+        <tr>
+          <td><strong>{{ o.ogrenci_no }}</strong></td>
+          <td>{{ o.ad_soyad }}</td>
+          <td style="text-align: right;">
+            <form method="post" action="{{ url_for('ogrenci_sil', ogrenci_id=o.id) }}"
+                  onsubmit="return confirm('Bu öğrenciyi listeden silmek istediğinize emin misiniz?');">
+              <button type="submit" class="btn kucuk tehlike">Sil</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="bos-durum">
+    <p>Bu ankete henüz öğrenci listesi yüklenmedi.</p>
+    <a href="{{ url_for('anket_duzenle', anket_id=anket.id) }}" class="btn birincil">Liste Yükle</a>
+  </div>
+{% endif %}
+
+{% endblock %}
