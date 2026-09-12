@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block baslik %}Anketler — PDR Panel{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>📋 Anketlerim</h1>
+  <a href="{{ url_for('anket_yeni') }}" class="btn birincil">+ Yeni Anket Oluştur</a>
+</div>
+
+{% if anketler %}
+  <div class="anket-listesi">
+    {% for a in anketler %}
+      <div class="anket-kart">
+        <div class="anket-ust">
+          <h3>{{ a.baslik }}</h3>
+          {% if a.yayinda %}
+            <span class="etiket yesil">Yayında</span>
+          {% else %}
+            <span class="etiket gri">Taslak</span>
+          {% endif %}
+        </div>
+        {% if a.aciklama %}
+          <p class="anket-aciklama">{{ a.aciklama }}</p>
+        {% endif %}
+        <div class="anket-meta">
+          <span>🔑 Kod: <strong class="kod">{{ a.kod }}</strong></span>
+          <span>📅 {{ a.olusturma[:10] }}</span>
+        </div>
+        <div class="anket-butonlar">
+          <a href="{{ url_for('anket_duzenle', anket_id=a.id) }}" class="btn kucuk">✏️ Düzenle</a>
+          <a href="{{ url_for('sonuclar', anket_id=a.id) }}" class="btn kucuk">📊 Sonuçlar</a>
+          <a href="{{ url_for('sonuclar_csv', anket_id=a.id) }}" class="btn kucuk">⬇️ CSV</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="bos-durum">
+    <p>Henüz anket oluşturmadınız.</p>
+    <a href="{{ url_for('anket_yeni') }}" class="btn birincil">İlk Anketinizi Oluşturun</a>
+  </div>
+{% endif %}
+
+{% endblock %}
