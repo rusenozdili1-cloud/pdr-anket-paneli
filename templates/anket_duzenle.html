@@ -11,12 +11,11 @@
   <p class="anket-aciklama">{{ anket.aciklama }}</p>
 {% endif %}
 
-<!-- Anket Kodu ve Durum -->
 <div class="bilgi-kutu">
   <div>
     <span class="etiket-baslik">Anket Kodu</span>
     <div class="kod-buyuk">{{ anket.kod }}</div>
-    <small>Bu kodu öğrencilerle paylaşın. Öğrenciler <strong>/ogrenci</strong> adresinden bu kodu girerek ankete ulaşır.</small>
+    <small>Bu kodu öğrencilerle paylaşın.</small>
   </div>
   <div>
     <span class="etiket-baslik">Durum</span>
@@ -26,9 +25,13 @@
       <span class="etiket gri">Taslak</span>
     {% endif %}
   </div>
+  <div>
+    <span class="etiket-baslik">Öğrenci Listesi</span>
+    <div style="font-size: 22px; font-weight: 700; color: #1e3a8a;">{{ ogrenci_sayisi }} öğrenci</div>
+    <small><a href="{{ url_for('ogrenci_listesi', anket_id=anket.id) }}">Listeyi görüntüle →</a></small>
+  </div>
 </div>
 
-<!-- Yayınla / Kapat -->
 <form method="post" action="{{ url_for('anket_yayinla', anket_id=anket.id) }}" style="margin-bottom: 24px;">
   {% if anket.yayinda %}
     <button type="submit" class="btn tehlike">⏸ Anketi Kapat</button>
@@ -36,6 +39,20 @@
     <button type="submit" class="btn birincil">▶ Anketi Yayınla</button>
   {% endif %}
 </form>
+
+<!-- Öğrenci Listesi Yükleme -->
+<div class="form-kart">
+  <h3>👥 Öğrenci Listesi Yükle</h3>
+  <p style="font-size: 13px; color: #6b7280; margin-bottom: 12px;">
+    Her satıra bir öğrenci yazın: <strong>numara;ad soyad</strong> (noktalı virgül veya virgül ile ayırın).<br>
+    Excel'den iki sütunu kopyalayıp buraya yapıştırabilirsiniz. <strong>Yüklenen liste öncekinin yerine geçer.</strong>
+  </p>
+  <form method="post" action="{{ url_for('ogrenci_yukle', anket_id=anket.id) }}">
+    <textarea name="liste" rows="8" required
+      placeholder="123;Ahmet Yılmaz&#10;124;Ayşe Demir&#10;125;Mehmet Kaya"></textarea>
+    <button type="submit" class="btn birincil tam">📥 Listeyi Yükle</button>
+  </form>
+</div>
 
 <!-- Yeni Soru Ekle -->
 <div class="form-kart">
@@ -60,7 +77,6 @@
   </form>
 </div>
 
-<!-- Mevcut Sorular -->
 <h3 style="margin-top: 30px;">📝 Sorular ({{ sorular|length }})</h3>
 
 {% if sorular %}
@@ -88,7 +104,7 @@
   </div>
 {% else %}
   <div class="bos-durum">
-    <p>Henüz soru eklemediniz. Yukarıdaki formdan ilk soruyu ekleyin.</p>
+    <p>Henüz soru eklemediniz.</p>
   </div>
 {% endif %}
 
