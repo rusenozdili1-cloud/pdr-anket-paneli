@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block baslik %}Katılım Listesi — {{ anket.baslik }}{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>✅ Katılım Listesi</h1>
+  <a href="{{ url_for('sonuclar', anket_id=anket.id) }}" class="btn">← Sonuçlara Dön</a>
+</div>
+
+<p class="anket-aciklama">{{ anket.baslik }}</p>
+
+<table class="tablo">
+  <thead>
+    <tr>
+      <th>Öğrenci No</th>
+      <th>Ad Soyad</th>
+      <th>Durum</th>
+      <th>Katılma Zamanı</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for o in liste %}
+      <tr>
+        <td><strong>{{ o.ogrenci_no }}</strong></
