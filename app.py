@@ -57,10 +57,18 @@ def init_db():
         FOREIGN KEY (anket_id) REFERENCES anketler(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS ogrenci_listesi (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        anket_id INTEGER NOT NULL,
+        ogrenci_no TEXT NOT NULL,
+        ad_soyad TEXT NOT NULL,
+        UNIQUE(anket_id, ogrenci_no),
+        FOREIGN KEY (anket_id) REFERENCES anketler(id) ON DELETE CASCADE
+    );
+
     CREATE TABLE IF NOT EXISTS katilimcilar (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         anket_id INTEGER NOT NULL,
-        ad_soyad TEXT NOT NULL,
         ogrenci_no TEXT NOT NULL,
         katilma TEXT NOT NULL,
         UNIQUE(anket_id, ogrenci_no)
@@ -182,7 +190,95 @@ def anket_duzenle(anket_id):
     sorular = db.execute(
         "SELECT * FROM sorular WHERE anket_id=? ORDER BY sira", (anket_id,)
     ).fetchall()
-    return render_template("anket_duzenle.html", anket=anket, sorular=sorular)
+    ogrenci_sayisi = db.execute(
+        "SELECT COUNT(*) FROM ogrenci_listesi WHERE anket_id=?", (anket_id,)
+    ).fetchone()[0]
+    return render_template(
+        "anket_duzenle.html",
+        anket=anket,
+        sorular=sorular,
+        ogrenci_sayisi=ogrenci_sayisi,
+    )
+
+
+@app.route("/anket/<int:anket_id>/ogrenci-yukle", methods=["POST"])
+@giris_gerekli
+def ogrenci_yukle(anket_id):
+    db = get_db()
+    anket = db.execute("SELECT * FROM anketler WHERE id=?", (anket_id,)).fetchone()
+    if not anket:
+        return redirect(url_for("panel"))
+
+    liste_metni = request.form.get("liste", "").strip()
+    if not liste_metni:
+        flash("Liste boş.", "hata")
+        return redirect(url_for("anket_duzenle", anket_id=anket_id))
+
+    # Eski listeyi sil
+    db.execute("DELETE FROM ogrenci_listesi WHERE anket_id=?", (anket_id,))
+
+    satirlar = liste_metni.split("\n")
+    eklenen = 0
+    hatali = 0
+    for satir in satirlar:
+        satir = satir.strip()
+        if not satir:
+            continue
+        # Ayraç: ; veya , veya TAB
+        if ";" in satir:
+            parcalar = satir.split(";")
+        elif "," in satir:
+            parcalar = satir.split(",")
+        elif "\t" in satir:
+            parcalar = satir.split("\t")
+        else:
+            parcalar = [satir]
+
+        if len(parcalar) < 2:
+            hatali += 1
+            continue
+        no = parcalar[0].strip()
+        ad = parcalar[1].strip()
+        if not no or not ad:
+            hatali += 1
+            continue
+        try:
+            db.execute(
+                "INSERT INTO ogrenci_listesi (anket_id, ogrenci_no, ad_soyad) VALUES (?,?,?)",
+                (anket_id, no, ad),
+            )
+            eklenen += 1
+        except sqlite3.IntegrityError:
+            hatali += 1
+    db.commit()
+    flash(f"{eklenen} öğrenci yüklendi." + (f" {hatali} satır atlandı." if hatali else ""), "basari")
+    return redirect(url_for("anket_duzenle", anket_id=anket_id))
+
+
+@app.route("/anket/<int:anket_id>/ogrenci-listesi")
+@giris_gerekli
+def ogrenci_listesi(anket_id):
+    db = get_db()
+    anket = db.execute("SELECT * FROM anketler WHERE id=?", (anket_id,)).fetchone()
+    if not anket:
+        return redirect(url_for("panel"))
+    liste = db.execute(
+        "SELECT * FROM ogrenci_listesi WHERE anket_id=? ORDER BY ogrenci_no",
+        (anket_id,),
+    ).fetchall()
+    return render_template("ogrenci_listesi.html", anket=anket, liste=liste)
+
+
+@app.route("/ogrenci-sil/<int:ogrenci_id>", methods=["POST"])
+@giris_gerekli
+def ogrenci_sil(ogrenci_id):
+    db = get_db()
+    o = db.execute("SELECT * FROM ogrenci_listesi WHERE id=?", (ogrenci_id,)).fetchone()
+    if o:
+        db.execute("DELETE FROM ogrenci_listesi WHERE id=?", (ogrenci_id,))
+        db.commit()
+        return redirect(url_for("ogrenci_listesi", anket_id=o["anket_id"]))
+    return redirect(url_for("panel"))
 
 
 @app.route("/soru/<int:soru_id>/sil", methods=["POST"])
@@ -210,6 +306,12 @@ def anket_yayinla(anket_id):
     if soru_sayisi == 0:
         flash("En az bir soru eklemelisiniz.", "hata")
         return redirect(url_for("anket_duzenle", anket_id=anket_id))
+    ogrenci_sayisi = db.execute(
+        "SELECT COUNT(*) FROM ogrenci_listesi WHERE anket_id=?", (anket_id,)
+    ).fetchone()[0]
+    if ogrenci_sayisi == 0:
+        flash("Yayınlamadan önce öğrenci listesi yüklemelisiniz.", "hata")
+        return redirect(url_for("anket_duzenle", anket_id=anket_id))
     yeni = 0 if anket["yayinda"] else 1
     db.execute("UPDATE anketler SET yayinda=? WHERE id=?", (yeni, anket_id))
     db.commit()
@@ -229,6 +331,9 @@ def sonuclar(anket_id):
     ).fetchall()
     katilimci_sayisi = db.execute(
         "SELECT COUNT(*) FROM katilimcilar WHERE anket_id=?", (anket_id,)
+    ).fetchone()[0]
+    toplam_ogrenci = db.execute(
+        "SELECT COUNT(*) FROM ogrenci_listesi WHERE anket_id=?", (anket_id,)
     ).fetchone()[0]
 
     veriler = []
@@ -259,8 +364,27 @@ def sonuclar(anket_id):
 
     return render_template(
         "sonuclar.html", anket=anket, veriler=veriler,
-        katilimci_sayisi=katilimci_sayisi
+        katilimci_sayisi=katilimci_sayisi, toplam_ogrenci=toplam_ogrenci
     )
+
+
+@app.route("/anket/<int:anket_id>/katilim-listesi")
+@giris_gerekli
+def katilim_listesi(anket_id):
+    db = get_db()
+    anket = db.execute("SELECT * FROM anketler WHERE id=?", (anket_id,)).fetchone()
+    if not anket:
+        return redirect(url_for("panel"))
+    liste = db.execute("""
+        SELECT ol.ogrenci_no, ol.ad_soyad,
+               CASE WHEN k.id IS NULL THEN 0 ELSE 1 END as katildi,
+               k.katilma
+        FROM ogrenci_listesi ol
+        LEFT JOIN katilimcilar k ON k.anket_id = ol.anket_id AND k.ogrenci_no = ol.ogrenci_no
+        WHERE ol.anket_id = ?
+        ORDER BY ol.ogrenci_no
+    """, (anket_id,)).fetchall()
+    return render_template("katilim_listesi.html", anket=anket, liste=liste)
 
 
 @app.route("/anket/<int:anket_id>/csv")
@@ -275,7 +399,7 @@ def sonuclar_csv(anket_id):
     ).fetchall()
 
     katilimcilar = db.execute(
-        "SELECT id, ad_soyad, ogrenci_no, katilma FROM katilimcilar WHERE anket_id=? ORDER BY id",
+        "SELECT * FROM katilimcilar WHERE anket_id=? ORDER BY id",
         (anket_id,),
     ).fetchall()
 
@@ -285,28 +409,18 @@ def sonuclar_csv(anket_id):
     yaz.writerow(["Kod", anket["kod"]])
     yaz.writerow(["Katılımcı Sayısı", len(katilimcilar)])
     yaz.writerow([])
-    yaz.writerow(["Öğrenci No", "Ad Soyad", "Katılma Zamanı"] + [f"S{s['sira']}: {s['metin']}" for s in sorular])
-
-    # Her katılımcı için cevapları sıralı çek
-    for k in katilimcilar:
-        satir = [k["ogrenci_no"], k["ad_soyad"], k["katilma"]]
-        for s in sorular:
-            # Aynı katılımcı için cevapları sırayla eşleştirmek zor; basitçe ilk cevabı al
-            # (anonimlik nedeniyle cevap-katılımcı eşleşmesi tutulmuyor)
-            satir.append("")
-        yaz.writerow(satir)
-
+    yaz.writerow(["Katılımcı Numaraları", ", ".join(k["ogrenci_no"] for k in katilimcilar)])
     yaz.writerow([])
-    yaz.writerow(["=== SORU BAZLI ÖZET ==="])
+
     for s in sorular:
         cevaplar = db.execute(
             "SELECT cevap FROM cevaplar WHERE anket_id=? AND soru_id=?",
             (anket_id, s["id"]),
         ).fetchall()
-        yaz.writerow([])
         yaz.writerow([f"S{s['sira']}: {s['metin']}"])
         for c in cevaplar:
             yaz.writerow(["", c["cevap"]])
+        yaz.writerow([])
 
     cikti = si.getvalue()
     si.close()
@@ -322,10 +436,9 @@ def sonuclar_csv(anket_id):
 def ogrenci_giris():
     if request.method == "POST":
         kod = request.form.get("kod", "").strip().upper()
-        ad = request.form.get("ad_soyad", "").strip()
         no = request.form.get("ogrenci_no", "").strip()
-        if not (kod and ad and no):
-            flash("Tüm alanları doldurun.", "hata")
+        if not (kod and no):
+            flash("Anket kodu ve numaranızı girin.", "hata")
             return render_template("ogrenci_giris.html")
         db = get_db()
         anket = db.execute(
@@ -334,6 +447,17 @@ def ogrenci_giris():
         if not anket:
             flash("Bu koda ait aktif anket bulunamadı.", "hata")
             return render_template("ogrenci_giris.html")
+
+        # Öğrenci listede var mı?
+        ogrenci = db.execute(
+            "SELECT * FROM ogrenci_listesi WHERE anket_id=? AND ogrenci_no=?",
+            (anket["id"], no),
+        ).fetchone()
+        if not ogrenci:
+            flash("Bu numara ankete kayıtlı öğrenci listesinde bulunamadı.", "hata")
+            return render_template("ogrenci_giris.html")
+
+        # Daha önce katılmış mı?
         mevcut = db.execute(
             "SELECT 1 FROM katilimcilar WHERE anket_id=? AND ogrenci_no=?",
             (anket["id"], no),
@@ -341,13 +465,13 @@ def ogrenci_giris():
         if mevcut:
             flash("Bu anketi zaten doldurdunuz.", "hata")
             return render_template("ogrenci_giris.html")
-        # Katılımcıyı kaydet
+
         db.execute(
-            "INSERT INTO katilimcilar (anket_id, ad_soyad, ogrenci_no, katilma) VALUES (?,?,?,?)",
-            (anket["id"], ad, no, datetime.now().isoformat(timespec="seconds")),
+            "INSERT INTO katilimcilar (anket_id, ogrenci_no, katilma) VALUES (?,?,?)",
+            (anket["id"], no, datetime.now().isoformat(timespec="seconds")),
         )
         db.commit()
-        session[f"katilimci_{anket['id']}"] = True
+        session[f"katilimci_{anket['id']}"] = no
         return redirect(url_for("anket_doldur", kod=kod))
     return render_template("ogrenci_giris.html")
 
@@ -363,7 +487,8 @@ def anket_doldur(kod):
         flash("Anket bulunamadı veya kapalı.", "hata")
         return redirect(url_for("ogrenci_giris"))
 
-    if not session.get(f"katilimci_{anket['id']}"):
+    no = session.get(f"katilimci_{anket['id']}")
+    if not no:
         flash("Lütfen önce bilgilerinizi girin.", "hata")
         return redirect(url_for("ogrenci_giris"))
 
