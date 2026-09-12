@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block baslik %}Yeni Anket — PDR Panel{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>➕ Yeni Anket Oluştur</h1>
+  <a href="{{ url_for('panel') }}" class="btn">← Geri</a>
+</div>
+
+<div class="form-kart">
+  <form method="post">
+    <label>Anket Başlığı *</label>
+    <input type="text" name="baslik" required placeholder="Örn: 9-A Sınıfı Akran Zorbalığı Anketi" autofocus>
+
+    <label>Açıklama (opsiyonel)</label>
+    <textarea name="aciklama" placeholder="Öğrencilere gösterilecek kısa açıklama..."></textarea>
+
+    <button type="submit" class="btn birincil tam">Anketi Oluştur ve Soru Ekle →</button>
+  </form>
+</div>
+
+{% endblock %}
