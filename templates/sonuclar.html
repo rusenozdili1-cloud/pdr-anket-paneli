@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block baslik %}Sonuçlar — {{ anket.baslik }}{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>📊 {{ anket.baslik }} — Sonuçlar</h1>
+  <div>
+    <a href="{{ url_for('sonuclar_csv', anket_id=anket.id) }}" class="btn birincil">⬇️ CSV İndir</a>
+    <a href="{{ url_for('panel') }}" class="btn">← Anketler</a>
+  </div>
+</div>
+
+<div class="ozet-kutu">
+  <div class="ozet-item">
+    <span class="ozet-sayi">{{ katilimci_sayisi }}</span>
+    <span class="ozet-etiket">Katılımcı</span>
+  </div>
+  <div class="ozet-item">
+    <span class="ozet-sayi">{{ veriler|length }}</span>
+    <span class="ozet-etiket">Soru</span>
+  </div>
+  <div class="ozet-item">
+    <span class="ozet-sayi">{{ anket.kod }}</span>
+    <span class="ozet-etiket">Anket Kodu</span>
+  </div>
+</div>
+
+{% if katilimci_sayisi == 0 %}
+  <div class="bos-durum">
+    <p>Henüz kimse bu anketi doldurmadı.</p>
+  </div>
+{% else %}
+
+  {% for v in veriler %}
+    <div class="sonuc-kart">
+      <h3>S{{ v.soru.sira }}. {{ v.soru.metin }}</h3>
+      <span class="etiket gri">{{ v.soru.tip }}</span>
+
+      {% if v.tip == 'secenekli' %}
+        <div class="grafik">
+          {% for sec, sayi in v.sayilar.items() %}
+            <div class="cubuk-satir">
+              <div class="cubuk-etiket">{{ sec }}</div>
+              <div class="cubuk-dis">
+                <div class="cubuk" style="width: {{ v.yuzdeler[sec] }}%;"></div>
+              </div>
+              <div class="cubuk-sayi">{{ sayi }} ({{ v.yuzdeler[sec] }}%)</div>
+            </div>
+          {% endfor %}
+        </div>
+        <p class="toplam-not">Toplam cevap: <strong>{{ v.toplam }}</strong></p>
+
+      {% else %}
+        <div class="metin-cevaplar">
+          {% if v.cevaplar %}
+            {% for c in v.cevaplar %}
+              <div class="metin-cevap">{{ c }}</div>
+            {% endfor %}
+          {% else %}
+            <p class="bos-not">Henüz cevap yok.</p>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+{% endif %}
+
+{% endblock %}
