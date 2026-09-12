@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block baslik %}Anket Girişi{% endblock %}
+{% block icerik %}
+
+<div class="giris-kutu">
+  <h1>📝 Ankete Katıl</h1>
+  <p class="aciklama">Öğretmeninizin verdiği anket kodunu ve bilgilerinizi girin.</p>
+
+  <form method="post">
+    <label>Anket Kodu *</label>
+    <input type="text" name="kod" required placeholder="Örn: A7K2M9"
+           style="text-transform: uppercase; letter-spacing: 3px; text-align: center; font-size: 20px; font-weight: 700;"
+           maxlength="6" autofocus>
+
+    <label>Ad Soyad *</label>
+    <input type="text" name="ad_soyad" required placeholder="Adınız ve soyadınız">
+
+    <label>Öğrenci Numaranız *</label>
+    <input type="text" name="ogrenci_no" required placeholder="Okul numaranız">
+
+    <button type="submit" class="btn birincil tam">Ankete Başla →</button>
+  </form>
+
+  <div class="uyari-bilgi">
+    <strong>🔒 Gizlilik:</strong> Adınız ve numaranız sadece <em>katılım kontrolü</em> için kullanılır.
+    Verdiğiniz cevaplar <strong>anonim</strong> olarak kaydedilir; cevaplarınız isminizle eşleştirilmez.
+  </div>
+</div>
+
+{% endblock %}
