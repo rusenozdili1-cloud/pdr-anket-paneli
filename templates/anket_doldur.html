@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block baslik %}{{ anket.baslik }}{% endblock %}
+{% block icerik %}
+
+<div class="anket-form-kap">
+  <h1>{{ anket.baslik }}</h1>
+  {% if anket.aciklama %}
+    <p class="anket-aciklama">{{ anket.aciklama }}</p>
+  {% endif %}
+
+  <div class="uyari-bilgi" style="margin: 20px 0;">
+    🔒 Cevaplarınız <strong>anonim</strong> olarak kaydedilir. İsminiz cevaplarınızla eşleştirilmez.
+  </div>
+
+  <form method="post">
+    {% for s in sorular %}
+      <div class="soru-blok">
+        <div class="soru-baslik">
+          <span class="soru-no">S{{ s.sira }}</span>
+          <span class="soru-metin">{{ s.metin }}</span>
+        </div>
+
+        {% if s.tip == 'coktan' or s.tip == 'likert' %}
+          <div class="secenek-grup">
+            {% for sec in s.secenekler.split('\n') %}
+              {% if sec.strip() %}
+                <label class="secenek-satir">
+                  <input type="radio" name="soru_{{ s.id }}" value="{{ sec.strip() }}" required>
+                  <span>{{ sec.strip() }}</span>
+                </label>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <textarea name="soru_{{ s.id }}" placeholder="Cevabınızı buraya yazın..." rows="4"></textarea>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <div class="gonder-alan">
+      <button type="submit" class="btn birincil tam"
+              onclick="return confirm('Anketi göndermek istediğinize emin misiniz? Gönderdikten sonra değiştiremezsiniz.');">
+        ✅ Anketi Gönder
+      </button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
