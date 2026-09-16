@@ -15,11 +15,21 @@
     <label>Okul Numaranız *</label>
     <input type="text" name="ogrenci_no" required placeholder="Okul numaranız">
 
+    <div class="kvkk-onay">
+      <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-weight: 400;">
+        <input type="checkbox" name="kvkk_onay" required style="width: auto; margin-top: 4px; transform: scale(1.2); accent-color: #1e3a8a;">
+        <span style="font-size: 13px; color: #374151;">
+          <a href="{{ url_for('kvkk') }}" target="_blank" style="color: #1e3a8a;">KVKK Aydınlatma Metni</a>'ni
+          okudum ve anladım. Kişisel verilerimin belirtilen amaçlarla işlenmesine onay veriyorum.
+        </span>
+      </label>
+    </div>
+
     <button type="submit" class="btn birincil tam">Ankete Başla →</button>
   </form>
 
   <div class="uyari-bilgi" style="margin-top: 20px;">
-    <strong>🔒 Gizlilik:</strong> Numarınız sadece <em>katılım kontrolü</em> için kullanılır.
+    <strong>🔒 Gizlilik:</strong> Adınız ve numaranız sadece <em>katılım kontrolü</em> için kullanılır.
     Cevaplarınız <strong>anonim</strong> olarak kaydedilir; cevaplarınız isminizle eşleştirilmez.
   </div>
 </div>
