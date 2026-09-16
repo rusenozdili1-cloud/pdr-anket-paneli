@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block baslik %}Yedekleme — PDR Panel{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>💾 Yedekleme</h1>
+  <a href="{{ url_for('panel') }}" class="btn">← Anketler</a>
+</div>
+
+<div class="uyari-bilgi" style="margin-bottom: 20px;">
+  <strong>⚠️ Veri Kaybı Uyarısı:</strong> Render ücretsiz planda veritabanı kalıcı değildir.
+  Sunucu uykuya girip çıktığında veriler silinebilir. <strong>Düzenli yedek almanız şiddetle önerilir.</strong>
+</div>
+
+<!-- İstatistikler -->
+<div class="ozet-kutu">
+  <div class="ozet-item">
+    <span class="ozet-sayi">{{ istatistik.anket }}</span>
+    <span class="ozet-etiket">Anket</span>
+  </div>
+  <div class="ozet-item">
+    <span class="ozet-sayi">{{ istatistik.soru }}</span>
+    <span class="ozet-etiket">Soru</span>
+  </div>
+  <div class="ozet-item">
+    <span class="ozet-sayi">{{ istatistik.ogrenci }}</span>
+    <span class="ozet-etiket">Öğrenci</span>
+  </div>
+  <div class="ozet-item">
+    <span class="ozet-sayi">{{ istatistik.cevap }}</span>
+    <span class="ozet-etiket">Cevap</span>
+  </div>
+</div>
+
+<!-- Yedek Bilgisi -->
+<div class="bilgi-kutu">
+  <div>
+    <span class="etiket-baslik">Veritabanı Boyutu</span>
+    <div style="font-size: 22px; font-weight: 700; color: #1e3a8a;">
+      {{ (boyut / 1024)|round(1) }} KB
+    </div>
+  </div>
+  <div>
+    <span class="etiket-baslik">Son Yedek</span>
+    <div style="font-size: 14px; color: #4b5563;">
+      {{ son_yedek[:19].replace('T', ' ') if son_yedek != 'Hiç yedek alınmadı' else son_yedek }}
+    </div>
+  </div>
+</div>
+
+<!-- Yedek İndir -->
+<div class="form-kart">
+  <h3>⬇️ Yedek İndir</h3>
+  <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px;">
+    Veritabanınızı kendi bilgisayarınıza indirin. Bu dosyayı güvenli bir yerde saklayın.
+  </p>
+  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+    <a href="{{ url_for('yedek_indir') }}" class="btn birincil">💾 Veritabanı İndir (.db)</a>
+    <a href="{{ url_for('yedek_json') }}" class="btn">📄 JSON Olarak İndir</a>
+  </div>
+  <small style="display: block; margin-top: 10px; color: #6b7280; font-size: 12px;">
+    <strong>.db</strong> dosyası tüm verileri içerir (SQLite formatı). <strong>.json</strong> dosyası okunabilir metin formatındadır.
+  </small>
+</div>
+
+<!-- Yedek Yükle -->
+<div class="form-kart">
+  <h3>⬆️ Yedek Yükle</h3>
+  <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px;">
+    Daha önce indirdiğiniz <strong>.db</strong> dosyasını yükleyerek verileri geri yükleyebilirsiniz.
+    <br>⚠️ <strong>Dikkat:</strong> Mevcut verileriniz silinir! (Yedek olarak saklanır)
+  </p>
+  <form method="post" action="{{ url_for('yedek_yukle') }}" enctype="multipart/form-data"
+        onsubmit="return confirm('Mevcut tüm verileriniz yedek dosyasıyla değiştirilecek. Devam edilsin mi?');">
+    <input type="file" name="dosya" accept=".db" required style="padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; width: 100%; margin-bottom: 16px;">
+    <button type="submit" class="btn tehlike tam">⬆️ Yedeği Yükle</button>
+  </form>
+</div>
+
+<!-- Yedekleme İpuçları -->
+<div class="uyari-bilgi">
+  <strong>💡 Yedekleme İpuçları:</strong>
+  <ul style="margin: 8px 0 0 20px; padding: 0;">
+    <li>Her anketten <strong>sonra</strong> yedek alın</li>
+    <li>Aynı anda en az <strong>2 farklı yerde</strong> saklayın (bilgisayar + bulut)</li>
+    <li>Yedek dosyalarını <strong>tarihli</strong> isimlerle saklayın</li>
+    <li>Önemli anketlerden önce ve sonra ayrı ayrı yedek alın</li>
+  </ul>
+</div>
+
+{% endblock %}
