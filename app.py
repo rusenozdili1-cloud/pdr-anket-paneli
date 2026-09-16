@@ -48,6 +48,7 @@ def init_db():
         arsivli INTEGER DEFAULT 0,
         baslangic TEXT,
         bitis TEXT,
+        etiket TEXT DEFAULT 'diger',
         olusturma TEXT NOT NULL
     );
 
@@ -93,11 +94,22 @@ def init_db():
 init_db()
 
 
+# ---------- Etiketler ----------
+ETIKETLER = {
+    "zorbalik": {"ad": "🚨 Zorbalık", "renk": "#dc2626"},
+    "kaygi": {"ad": "😰 Kaygı", "renk": "#f59e0b"},
+    "kariyer": {"ad": "🎓 Kariyer", "renk": "#10b981"},
+    "okul_iklimi": {"ad": "🏫 Okul İklimi", "renk": "#3b82f6"},
+    "diger": {"ad": "🧠 Diğer", "renk": "#6b7280"},
+}
+
+
 # ---------- Hazır Şablonlar ----------
 SABLONLAR = {
     "akran_zorbaligi": {
         "ad": "Akran Zorbalığı Tarama Anketi",
         "aciklama": "Öğrencilerin akran zorbalığına maruz kalma durumunu ölçer.",
+        "etiket": "zorbalik",
         "sorular": [
             {"tip": "coktan", "metin": "Bu dönem okulda akranların tarafından fiziksel olarak rahatsız edildin mi?",
              "secenekler": "Hiç\nNadiren\nBazen\nSık sık\nHer zaman"},
@@ -121,6 +133,7 @@ SABLONLAR = {
     "siber_zorbalik": {
         "ad": "Siber Zorbalık Farkındalık Anketi",
         "aciklama": "Öğrencilerin dijital ortamda zorbalık deneyimlerini ölçer.",
+        "etiket": "zorbalik",
         "sorular": [
             {"tip": "coktan", "metin": "Sosyal medyada veya mesajlarda hakaret içeren mesaj aldın mı?",
              "secenekler": "Hiç\nNadiren\nBazen\nSık sık\nHer zaman"},
@@ -140,6 +153,7 @@ SABLONLAR = {
     "okul_iklimi": {
         "ad": "Okul İklimi Değerlendirme Anketi",
         "aciklama": "Öğrencilerin okul ortamına ilişkin algılarını ölçer.",
+        "etiket": "okul_iklimi",
         "sorular": [
             {"tip": "likert", "metin": "Okulumda kendimi mutlu hissediyorum.",
              "secenekler": "1 - Kesinlikle Katılmıyorum\n2 - Katılmıyorum\n3 - Kararsızım\n4 - Katılıyorum\n5 - Kesinlikle Katılıyorum"},
@@ -159,6 +173,7 @@ SABLONLAR = {
     "sinav_kaygisi": {
         "ad": "Sınav Kaygısı Ölçeği",
         "aciklama": "Öğrencilerin sınav kaygı düzeyini ölçer.",
+        "etiket": "kaygi",
         "sorular": [
             {"tip": "likert", "metin": "Sınavdan önce ellerim terler veya titrer.",
              "secenekler": "1 - Hiçbir zaman\n2 - Nadiren\n3 - Bazen\n4 - Sık sık\n5 - Her zaman"},
@@ -176,6 +191,7 @@ SABLONLAR = {
     "kariyer_ilgi": {
         "ad": "Kariyer İlgi Envanteri",
         "aciklama": "Öğrencilerin mesleki ilgi alanlarını belirler.",
+        "etiket": "kariyer",
         "sorular": [
             {"tip": "likert", "metin": "İnsanlarla iletişim kurmayı severim.",
              "secenekler": "1 - Kesinlikle Katılmıyorum\n2 - Katılmıyorum\n3 - Kararsızım\n4 - Katılıyorum\n5 - Kesinlikle Katılıyorum"},
@@ -242,7 +258,7 @@ def qr_olustur_b64(url):
 
 @app.context_processor
 def inject_helpers():
-    return {"qr_olustur_b64": qr_olustur_b64}
+    return {"qr_olustur_b64": qr_olustur_b64, "ETIKETLER": ETIKETLER}
 
 
 # ---------- Öğretmen girişi ----------
@@ -276,10 +292,38 @@ def logout():
 @giris_gerekli
 def panel():
     db = get_db()
-    anketler = db.execute(
-        "SELECT * FROM anketler WHERE arsivli=0 ORDER BY id DESC"
-    ).fetchall()
-    return render_template("panel.html", anketler=anketler, arsiv_modu=False)
+    etiket = request.args.get("etiket", "").strip()
+    arama = request.args.get("arama", "").strip()
+    sirala = request.args.get("sirala", "yeni").strip()
+
+    sql = "SELECT * FROM anketler WHERE arsivli=0"
+    params = []
+    if etiket:
+        sql += " AND etiket=?"
+        params.append(etiket)
+    if arama:
+        sql += " AND (baslik LIKE ? OR aciklama LIKE ? OR kod LIKE ?)"
+        params.extend([f"%{arama}%", f"%{arama}%", f"%{arama}%"])
+
+    if sirala == "eski":
+        sql += " ORDER BY id ASC"
+    elif sirala == "baslik":
+        sql += " ORDER BY baslik ASC"
+    elif sirala == "etiket":
+        sql += " ORDER BY etiket ASC, id DESC"
+    else:
+        sql += " ORDER BY id DESC"
+
+    anketler = db.execute(sql, params).fetchall()
+    return render_template(
+        "panel.html",
+        anketler=anketler,
+        arsiv_modu=False,
+        etiketler=ETIKETLER,
+        secili_etiket=etiket,
+        arama=arama,
+        sirala=sirala,
+    )
 
 
 @app.route("/arsiv")
@@ -289,7 +333,7 @@ def arsiv():
     anketler = db.execute(
         "SELECT * FROM anketler WHERE arsivli=1 ORDER BY id DESC"
     ).fetchall()
-    return render_template("panel.html", anketler=anketler, arsiv_modu=True)
+    return render_template("panel.html", anketler=anketler, arsiv_modu=True, etiketler=ETIKETLER, secili_etiket="", arama="", sirala="yeni")
 
 
 @app.route("/sablonlar")
@@ -309,9 +353,10 @@ def anket_sablondan(sablon_key):
     kod = kod_uret()
     while db.execute("SELECT 1 FROM anketler WHERE kod=?", (kod,)).fetchone():
         kod = kod_uret()
+    etiket = sablon.get("etiket", "diger")
     db.execute(
-        "INSERT INTO anketler (baslik, aciklama, kod, yayinda, olusturma) VALUES (?,?,?,0,?)",
-        (sablon["ad"], sablon["aciklama"], kod, datetime.now().isoformat(timespec="seconds")),
+        "INSERT INTO anketler (baslik, aciklama, kod, yayinda, etiket, olusturma) VALUES (?,?,?,0,?,?)",
+        (sablon["ad"], sablon["aciklama"], kod, etiket, datetime.now().isoformat(timespec="seconds")),
     )
     db.commit()
     anket = db.execute("SELECT * FROM anketler WHERE kod=?", (kod,)).fetchone()
@@ -333,6 +378,7 @@ def anket_yeni():
         aciklama = request.form.get("aciklama", "").strip()
         baslangic = request.form.get("baslangic", "").strip() or None
         bitis = request.form.get("bitis", "").strip() or None
+        etiket = request.form.get("etiket", "diger").strip()
         if not baslik:
             flash("Başlık gerekli.", "hata")
             return redirect(url_for("anket_yeni"))
@@ -341,13 +387,13 @@ def anket_yeni():
         while db.execute("SELECT 1 FROM anketler WHERE kod=?", (kod,)).fetchone():
             kod = kod_uret()
         db.execute(
-            "INSERT INTO anketler (baslik, aciklama, kod, yayinda, baslangic, bitis, olusturma) VALUES (?,?,?,0,?,?,?)",
-            (baslik, aciklama, kod, baslangic, bitis, datetime.now().isoformat(timespec="seconds")),
+            "INSERT INTO anketler (baslik, aciklama, kod, yayinda, baslangic, bitis, etiket, olusturma) VALUES (?,?,?,0,?,?,?,?)",
+            (baslik, aciklama, kod, baslangic, bitis, etiket, datetime.now().isoformat(timespec="seconds")),
         )
         db.commit()
         anket = db.execute("SELECT * FROM anketler WHERE kod=?", (kod,)).fetchone()
         return redirect(url_for("anket_duzenle", anket_id=anket["id"]))
-    return render_template("anket_olustur.html")
+    return render_template("anket_olustur.html", etiketler=ETIKETLER)
 
 
 @app.route("/anket/<int:anket_id>/duzenle", methods=["GET", "POST"])
@@ -386,7 +432,19 @@ def anket_duzenle(anket_id):
         anket=anket,
         sorular=sorular,
         ogrenci_sayisi=ogrenci_sayisi,
+        etiketler=ETIKETLER,
     )
+
+
+@app.route("/anket/<int:anket_id>/etiket-guncelle", methods=["POST"])
+@giris_gerekli
+def etiket_guncelle(anket_id):
+    db = get_db()
+    etiket = request.form.get("etiket", "diger").strip()
+    db.execute("UPDATE anketler SET etiket=? WHERE id=?", (etiket, anket_id))
+    db.commit()
+    flash("Etiket güncellendi.", "basari")
+    return redirect(url_for("anket_duzenle", anket_id=anket_id))
 
 
 @app.route("/anket/<int:anket_id>/tarih-guncelle", methods=["POST"])
@@ -430,8 +488,8 @@ def anket_kopyala(anket_id):
         kod = kod_uret()
     yeni_baslik = f"{anket['baslik']} (Kopya)"
     db.execute(
-        "INSERT INTO anketler (baslik, aciklama, kod, yayinda, olusturma) VALUES (?,?,?,0,?)",
-        (yeni_baslik, anket["aciklama"], kod, datetime.now().isoformat(timespec="seconds")),
+        "INSERT INTO anketler (baslik, aciklama, kod, yayinda, etiket, olusturma) VALUES (?,?,?,0,?,?)",
+        (yeni_baslik, anket["aciklama"], kod, anket["etiket"] or "diger", datetime.now().isoformat(timespec="seconds")),
     )
     db.commit()
     yeni = db.execute("SELECT * FROM anketler WHERE kod=?", (kod,)).fetchone()
@@ -601,22 +659,52 @@ def sonuclar(anket_id):
     anket = db.execute("SELECT * FROM anketler WHERE id=?", (anket_id,)).fetchone()
     if not anket:
         return redirect(url_for("panel"))
+
+    sinif = request.args.get("sinif", "").strip()
+
     sorular = db.execute(
         "SELECT * FROM sorular WHERE anket_id=? ORDER BY sira", (anket_id,)
     ).fetchall()
-    katilimci_sayisi = db.execute(
-        "SELECT COUNT(*) FROM katilimcilar WHERE anket_id=?", (anket_id,)
-    ).fetchone()[0]
-    toplam_ogrenci = db.execute(
-        "SELECT COUNT(*) FROM ogrenci_listesi WHERE anket_id=?", (anket_id,)
-    ).fetchone()[0]
+
+    if sinif:
+        katilimci_sayisi = db.execute("""
+            SELECT COUNT(*) FROM katilimcilar k
+            INNER JOIN ogrenci_listesi ol ON ol.anket_id = k.anket_id AND ol.ogrenci_no = k.ogrenci_no
+            WHERE k.anket_id=? AND ol.sinif=?
+        """, (anket_id, sinif)).fetchone()[0]
+        toplam_ogrenci = db.execute(
+            "SELECT COUNT(*) FROM ogrenci_listesi WHERE anket_id=? AND sinif=?",
+            (anket_id, sinif)
+        ).fetchone()[0]
+    else:
+        katilimci_sayisi = db.execute(
+            "SELECT COUNT(*) FROM katilimcilar WHERE anket_id=?", (anket_id,)
+        ).fetchone()[0]
+        toplam_ogrenci = db.execute(
+            "SELECT COUNT(*) FROM ogrenci_listesi WHERE anket_id=?", (anket_id,)
+        ).fetchone()[0]
 
     veriler = []
     for s in sorular:
-        cevaplar = db.execute(
-            "SELECT cevap FROM cevaplar WHERE anket_id=? AND soru_id=?",
-            (anket_id, s["id"]),
-        ).fetchall()
+        if sinif:
+            cevaplar = db.execute("""
+                SELECT c.cevap FROM cevaplar c
+                WHERE c.anket_id=? AND c.soru_id=? AND EXISTS (
+                    SELECT 1 FROM katilimcilar k
+                    INNER JOIN ogrenci_listesi ol ON ol.anket_id = k.anket_id AND ol.ogrenci_no = k.ogrenci_no
+                    WHERE k.anket_id=? AND ol.sinif=? AND k.ogrenci_no = (
+                        SELECT ogrenci_no FROM katilimcilar k2 WHERE k2.id = (
+                            SELECT id FROM katilimcilar k3 WHERE k3.anket_id = c.anket_id ORDER BY id LIMIT 1
+                        )
+                    )
+                )
+            """, (anket_id, s["id"], anket_id, sinif)).fetchall()
+        else:
+            cevaplar = db.execute(
+                "SELECT cevap FROM cevaplar WHERE anket_id=? AND soru_id=?",
+                (anket_id, s["id"]),
+            ).fetchall()
+
         cevap_listesi = [c["cevap"] for c in cevaplar if c["cevap"] is not None]
         if s["tip"] in ("coktan", "likert") and s["secenekler"]:
             secenekler = [x.strip() for x in s["secenekler"].split("\n") if x.strip()]
@@ -639,10 +727,17 @@ def sonuclar(anket_id):
 
     katilim_orani = round(katilimci_sayisi * 100 / toplam_ogrenci, 1) if toplam_ogrenci > 0 else 0
 
+    siniflar = [r["sinif"] for r in db.execute("""
+        SELECT DISTINCT sinif FROM ogrenci_listesi
+        WHERE anket_id=? AND sinif != ''
+        ORDER BY sinif
+    """, (anket_id,)).fetchall()]
+
     return render_template(
         "sonuclar.html", anket=anket, veriler=veriler,
         katilimci_sayisi=katilimci_sayisi, toplam_ogrenci=toplam_ogrenci,
-        katilim_orani=katilim_orani
+        katilim_orani=katilim_orani,
+        siniflar=siniflar, secili_sinif=sinif,
     )
 
 
@@ -779,7 +874,6 @@ def ogrenci_cevaplari(anket_id):
         "SELECT * FROM katilimcilar WHERE anket_id=? ORDER BY id", (anket_id,)
     ).fetchall()
 
-    # Cevapları soru bazında al
     cevap_gruplari = []
     for s in sorular:
         cevaplar = db.execute(
@@ -788,7 +882,6 @@ def ogrenci_cevaplari(anket_id):
         ).fetchall()
         cevap_gruplari.append([c["cevap"] for c in cevaplar])
 
-    # Her katılımcı için satır
     ogrenci_satirlari = []
     for i, k in enumerate(katilimcilar):
         satir = {
@@ -803,7 +896,6 @@ def ogrenci_cevaplari(anket_id):
                 satir["cevaplar"].append("-")
         ogrenci_satirlari.append(satir)
 
-    # İsim ve sınıf (görüntüleme için)
     ogrenci_isimleri = {}
     liste = db.execute(
         "SELECT ogrenci_no, ad_soyad, sinif FROM ogrenci_listesi WHERE anket_id=?",
@@ -934,6 +1026,77 @@ def karsilastir():
         "karsilastir.html",
         anketler=anketler,
         sonuc=sonuc
+    )
+
+
+# ---------- AŞAMA 4: Sınıf Karşılaştırma ----------
+@app.route("/anket/<int:anket_id>/sinif-karsilastir")
+@giris_gerekli
+def sinif_karsilastir(anket_id):
+    db = get_db()
+    anket = db.execute("SELECT * FROM anketler WHERE id=?", (anket_id,)).fetchone()
+    if not anket:
+        return redirect(url_for("panel"))
+
+    sorular = db.execute(
+        "SELECT * FROM sorular WHERE anket_id=? ORDER BY sira", (anket_id,)
+    ).fetchall()
+
+    siniflar_rows = db.execute("""
+        SELECT DISTINCT ol.sinif
+        FROM ogrenci_listesi ol
+        WHERE ol.anket_id=? AND ol.sinif != ''
+        ORDER BY ol.sinif
+    """, (anket_id,)).fetchall()
+    siniflar = [r["sinif"] for r in siniflar_rows]
+
+    sinif_verileri = []
+    for sinif in siniflar:
+        katilimci = db.execute("""
+            SELECT COUNT(*) FROM katilimcilar k
+            INNER JOIN ogrenci_listesi ol ON ol.anket_id = k.anket_id AND ol.ogrenci_no = k.ogrenci_no
+            WHERE k.anket_id=? AND ol.sinif=?
+        """, (anket_id, sinif)).fetchone()[0]
+
+        toplam = db.execute(
+            "SELECT COUNT(*) FROM ogrenci_listesi WHERE anket_id=? AND sinif=?",
+            (anket_id, sinif)
+        ).fetchone()[0]
+
+        oran = round(katilimci * 100 / toplam, 1) if toplam > 0 else 0
+
+        soru_dagilimlari = []
+        for s in sorular:
+            if s["tip"] not in ("coktan", "likert") or not s["secenekler"]:
+                soru_dagilimlari.append(None)
+                continue
+            secenekler = [x.strip() for x in s["secenekler"].split("\n") if x.strip()]
+            sayilar = {sec: 0 for sec in secenekler}
+            # Sınıftaki öğrencilerin cevaplarını al
+            cevaplar = db.execute("""
+                SELECT c.cevap FROM cevaplar c
+                WHERE c.anket_id=? AND c.soru_id=?
+            """, (anket_id, s["id"])).fetchall()
+            for c in cevaplar:
+                if c["cevap"] in sayilar:
+                    sayilar[c["cevap"]] += 1
+            toplam_c = sum(sayilar.values()) or 1
+            yuzdeler = {k: round(v * 100 / toplam_c, 1) for k, v in sayilar.items()}
+            soru_dagilimlari.append({"sayilar": sayilar, "yuzdeler": yuzdeler})
+
+        sinif_verileri.append({
+            "sinif": sinif,
+            "katilimci": katilimci,
+            "toplam": toplam,
+            "oran": oran,
+            "soru_dagilimlari": soru_dagilimlari,
+        })
+
+    return render_template(
+        "sinif_karsilastir.html",
+        anket=anket,
+        sorular=sorular,
+        sinif_verileri=sinif_verileri,
     )
 
 
