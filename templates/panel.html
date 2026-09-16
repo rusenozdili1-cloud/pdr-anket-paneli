@@ -1,43 +1,82 @@
 {% extends "base.html" %}
-{% block baslik %}Anketler — PDR Panel{% endblock %}
+{% block baslik %}{% if arsiv_modu %}Arşiv{% else %}Anketler{% endif %} — PDR Panel{% endblock %}
 {% block icerik %}
 
 <div class="baslik-satir">
-  <h1>📋 Anketlerim</h1>
-  <a href="{{ url_for('anket_yeni') }}" class="btn birincil">+ Yeni Anket Oluştur</a>
+  <h1>{% if arsiv_modu %}🗄️ Arşivlenen Anketler{% else %}📋 Anketlerim{% endif %}</h1>
+  <div>
+    {% if arsiv_modu %}
+      <a href="{{ url_for('panel') }}" class="btn">← Aktif Anketler</a>
+    {% else %}
+      <a href="{{ url_for('sablonlar') }}" class="btn">📚 Şablonlardan Oluştur</a>
+      <a href="{{ url_for('arsiv') }}" class="btn">🗄️ Arşiv</a>
+      <a href="{{ url_for('anket_yeni') }}" class="btn birincil">+ Yeni Anket</a>
+    {% endif %}
+  </div>
 </div>
 
 {% if anketler %}
   <div class="anket-listesi">
     {% for a in anketler %}
-      <div class="anket-kart">
+      <div class="anket-kart {% if a.arsivli %}arsivli{% endif %}">
         <div class="anket-ust">
           <h3>{{ a.baslik }}</h3>
-          {% if a.yayinda %}
-            <span class="etiket yesil">Yayında</span>
-          {% else %}
-            <span class="etiket gri">Taslak</span>
-          {% endif %}
+          <div>
+            {% if a.yayinda %}
+              <span class="etiket yesil">Yayında</span>
+            {% elif a.arsivli %}
+              <span class="etiket gri">Arşivli</span>
+            {% else %}
+              <span class="etiket gri">Taslak</span>
+            {% endif %}
+          </div>
         </div>
+
         {% if a.aciklama %}
           <p class="anket-aciklama">{{ a.aciklama }}</p>
         {% endif %}
+
         <div class="anket-meta">
           <span>🔑 Kod: <strong class="kod">{{ a.kod }}</strong></span>
           <span>📅 {{ a.olusturma[:10] }}</span>
         </div>
+
+        {% if a.baslangic or a.bitis %}
+          <div class="anket-meta" style="font-size: 12px;">
+            {% if a.baslangic %}<span>▶ Başlangıç: {{ a.baslangic[:16] }}</span>{% endif %}
+            {% if a.bitis %}<span>⏹ Bitiş: {{ a.bitis[:16] }}</span>{% endif %}
+          </div>
+        {% endif %}
+
         <div class="anket-butonlar">
           <a href="{{ url_for('anket_duzenle', anket_id=a.id) }}" class="btn kucuk">✏️ Düzenle</a>
           <a href="{{ url_for('sonuclar', anket_id=a.id) }}" class="btn kucuk">📊 Sonuçlar</a>
+          <a href="{{ url_for('anket_qr', anket_id=a.id) }}" class="btn kucuk">📱 QR</a>
           <a href="{{ url_for('sonuclar_csv', anket_id=a.id) }}" class="btn kucuk">⬇️ CSV</a>
+        </div>
+
+        <div class="anket-butonlar" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+          <form method="post" action="{{ url_for('anket_kopyala', anket_id=a.id) }}" style="display:inline;">
+            <button type="submit" class="btn kucuk">📋 Kopyala</button>
+          </form>
+          <form method="post" action="{{ url_for('anket_arsivle', anket_id=a.id) }}" style="display:inline;">
+            <button type="submit" class="btn kucuk">{% if a.arsivli %}📤 Arşivden Çıkar{% else %}🗄️ Arşivle{% endif %}</button>
+          </form>
+          <form method="post" action="{{ url_for('anket_sil', anket_id=a.id) }}" style="display:inline;"
+                onsubmit="return confirm('Bu anketi ve TÜM verilerini silmek istediğinize emin misiniz? Bu işlem GERİ ALINAMAZ.');">
+            <button type="submit" class="btn kucuk tehlike">🗑️ Sil</button>
+          </form>
         </div>
       </div>
     {% endfor %}
   </div>
 {% else %}
   <div class="bos-durum">
-    <p>Henüz anket oluşturmadınız.</p>
-    <a href="{{ url_for('anket_yeni') }}" class="btn birincil">İlk Anketinizi Oluşturun</a>
+    <p>{% if arsiv_modu %}Arşivde anket yok.{% else %}Henüz anket oluşturmadınız.{% endif %}</p>
+    {% if not arsiv_modu %}
+      <a href="{{ url_for('anket_yeni') }}" class="btn birincil">İlk Anketinizi Oluşturun</a>
+      <a href="{{ url_for('sablonlar') }}" class="btn">📚 Hazır Şablonlar</a>
+    {% endif %}
   </div>
 {% endif %}
 
