@@ -15,7 +15,6 @@
   <div>
     <span class="etiket-baslik">Anket Kodu</span>
     <div class="kod-buyuk">{{ anket.kod }}</div>
-    <small>Öğrencilerle paylaşın.</small>
   </div>
   <div>
     <span class="etiket-baslik">Durum</span>
@@ -48,6 +47,20 @@
     <button type="submit" class="btn">📋 Kopyala</button>
   </form>
   <a href="{{ url_for('sonuclar', anket_id=anket.id) }}" class="btn">📊 Sonuçlar</a>
+  <a href="{{ url_for('sinif_karsilastir', anket_id=anket.id) }}" class="btn">🏫 Sınıf Karşılaştır</a>
+</div>
+
+<!-- Etiket Güncelle -->
+<div class="form-kart">
+  <h3>🏷️ Etiket</h3>
+  <form method="post" action="{{ url_for('etiket_guncelle', anket_id=anket.id) }}">
+    <select name="etiket">
+      {% for key, e in etiketler.items() %}
+        <option value="{{ key }}" {% if anket.etiket == key %}selected{% endif %}>{{ e.ad }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn birincil">Etiketi Kaydet</button>
+  </form>
 </div>
 
 <!-- Tarih Ayarları -->
@@ -65,9 +78,6 @@
       </div>
     </div>
     <button type="submit" class="btn birincil">Tarihleri Kaydet</button>
-    <small style="color: #6b7280; font-size: 12px; display: block; margin-top: 8px;">
-      Boş bırakılırsa: başlangıç = hemen, bitiş = süresiz
-    </small>
   </form>
 </div>
 
@@ -75,12 +85,13 @@
 <div class="form-kart">
   <h3>👥 Öğrenci Listesi Yükle</h3>
   <p style="font-size: 13px; color: #6b7280; margin-bottom: 12px;">
-    Her satıra bir öğrenci: <strong>numara;ad soyad</strong><br>
-    Excel'den kopyalayıp yapıştırabilirsiniz. Yüklenen liste öncekinin yerine geçer.
+    Her satıra bir öğrenci: <strong>numara;ad soyad;sınıf</strong><br>
+    Sınıf bilgisi <strong>isteğe bağlı</strong> ama sınıf bazlı karşılaştırma için gereklidir.<br>
+    Örnek: <code>123;Ahmet Yılmaz;9-A</code>
   </p>
   <form method="post" action="{{ url_for('ogrenci_yukle', anket_id=anket.id) }}">
     <textarea name="liste" rows="8" required
-      placeholder="123;Ahmet Yılmaz&#10;124;Ayşe Demir&#10;125;Mehmet Kaya"></textarea>
+      placeholder="123;Ahmet Yılmaz;9-A&#10;124;Ayşe Demir;9-A&#10;125;Mehmet Kaya;9-B"></textarea>
     <button type="submit" class="btn birincil tam">📥 Listeyi Yükle</button>
   </form>
 </div>
@@ -134,9 +145,7 @@
     {% endfor %}
   </div>
 {% else %}
-  <div class="bos-durum">
-    <p>Henüz soru eklemediniz.</p>
-  </div>
+  <div class="bos-durum"><p>Henüz soru eklemediniz.</p></div>
 {% endif %}
 
 <script>
