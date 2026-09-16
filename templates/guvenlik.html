@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block baslik %}Güvenlik — PDR Panel{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>🔒 Güvenlik</h1>
+  <a href="{{ url_for('panel') }}" class="btn">← Anketler</a>
+</div>
+
+<div class="uyari-bilgi" style="margin-bottom: 20px;">
+  <strong>🛡️ Güvenlik Ayarları:</strong>
+  <ul style="margin: 8px 0 0 20px; padding: 0;">
+    <li>✅ Oturum süresi: <strong>15 dakika</strong> (hareketsizlik sonrası otomatik çıkış)</li>
+    <li>✅ Başarısız giriş sınırı: <strong>5 deneme / 5 dakika</strong></li>
+    <li>✅ Tüm girişler ve önemli işlemler loglanır</li>
+  </ul>
+</div>
+
+<!-- Şifre Değiştirme -->
+<div class="form-kart">
+  <h3>🔑 Şifre Değiştir</h3>
+  <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px;">
+    ⚠️ <strong>Önemli:</strong> Şifre değişikliği sadece bu oturum için geçerlidir.
+    Kalıcı olması için Render panelinden <code>ADMIN_PASSWORD</code> environment değişkenini de güncellemeniz gerekir.
+  </p>
+  <form method="post" action="{{ url_for('sifre_degistir') }}">
+    <label>Mevcut Şifre</label>
+    <input type="password" name="mevcut" required>
+
+    <label>Yeni Şifre (min. 6 karakter)</label>
+    <input type="password" name="yeni" required minlength="6">
+
+    <label>Yeni Şifre (tekrar)</label>
+    <input type="password" name="tekrar" required minlength="6">
+
+    <button type="submit" class="btn birincil tam">🔒 Şifreyi Değiştir</button>
+  </form>
+</div>
+
+<!-- Son Girişler -->
+<div class="form-kart">
+  <h3>📋 Son Giriş Denemeleri ({{ son_girisler|length }})</h3>
+  {% if son_girisler %}
+    <table class="tablo">
+      <thead>
+        <tr>
+          <th>Tarih</th>
+          <th>Kullanıcı</th>
+          <th>IP</th>
+          <th>Durum</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for g in son_girisler %}
+          <tr>
+            <td><small>{{ g.tarih[:19].replace('T', ' ') }}</small></td>
+            <td>{{ g.kullanici or '-' }}</td>
+            <td><code style="font-size: 12px;">{{ g.ip or '-' }}</code></td>
+            <td>
+              {% if g.basarili %}
+                <span class="etiket yesil">✅ Başarılı</span>
+              {% else %}
+                <span class="etiket" style="background: #fee2e2; color: #991b1b;">❌ Başarısız</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="bos-durum"><p>Henüz giriş kaydı yok.</p></div>
+  {% endif %}
+</div>
+
+<div style="display: flex; gap: 10px; margin-top: 20px;">
+  <a href="{{ url_for('loglar') }}" class="btn birincil">📜 Tüm Logları Gör</a>
+  <a href="{{ url_for('yedekleme') }}" class="btn">💾 Yedekleme</a>
+</div>
+
+{% endblock %}
