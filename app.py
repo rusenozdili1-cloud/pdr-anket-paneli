@@ -476,57 +476,202 @@ def anket_sil(anket_id):
     return redirect(url_for("panel"))
 
 
-@app.route("/anket/<int:anket_id>/ogrenci-yukle", methods=["POST"])
+# ---------- AŞAMA 3: Yeni Özellikler ----------
+@app.route("/anket/<int:anket_id>/ogrenci-cevaplari")
 @giris_gerekli
-def ogrenci_yukle(anket_id):
+def ogrenci_cevaplari(anket_id):
     db = get_db()
     anket = db.execute("SELECT * FROM anketler WHERE id=?", (anket_id,)).fetchone()
     if not anket:
         return redirect(url_for("panel"))
+    
+    sorular = db.execute(
+        "SELECT * FROM sorular WHERE anket_id=? ORDER BY sira", (anket_id,)
+    ).fetchall()
+    
+    # Katılımcıları çek
+    katilimcilar = db.execute(
+        "SELECT * FROM katilimcilar WHERE anket_id=? ORDER BY ogrenci_no",
+        (anket_id,)
+    ).fetchall()
+    
+    # Her katılımcı için cevapları çek (numara ile eşleştir)
+    # NOT: Anonimlik nedeniyle cevaplar doğrudan numara ile tutulmuyor.
+    # Ama anket_doldur'da session'a numara kaydediliyor, bu yüzden
+    # cevaplar anket_id + soru_id ile tutuluyor, katılımcı ile eşleşmiyor.
+    # Bu yüzden burada sadece katılım listesini + cevap özetini göstereceğiz.
+    # 
+    # Gerçek anonim eşleştirme için: aynı oturumda verilen cevaplar sırayla
+    # alınır. Öğrenci sırası ile cevap sırası eşleştirilir.
+    
+    # Basit yaklaşım: her katılımcı için cevapları sırayla al
+    # (katılım sırası = cevap sırası varsayımı)
+    toplam_katilimci = len(katilimcilar)
+    cevap_gruplari = []
+    
+    # Cevapları soru bazında topla
+    for s in sorular:
+        cevaplar = db.execute(
+            "SELECT cevap FROM cevaplar WHERE anket_id=? AND soru_id=?",
+            (anket_id, s["id"])
+        ).fetchall()
+        cevap_gruplari.append([c["cevap"] for c in cevaplar])
+    
+    # Her katılımcı için satır oluştur
+    ogrenci_satirlari = []
+    for i, k in enumerate(katilimcilar):
+        satir = {
+            "no": k["ogrenci_no"],
+            "katilma": k["katilma"],
+            "cevaplar": []
+        }
+        for grup in cevap_gruplari:
+            if i < len(grup):
+                satir["cevaplar"].append(grup[i])
+            else:
+                satir["cevaplar"].append("-")
+        ogrenci_satirlari.append(satir)
+    
+    # Öğrenci listesinden isim al (görüntüleme için değil, sadece katılım kontrolü)
+    ogrenci_isimleri = {}
+    liste = db.execute(
+        "SELECT ogrenci_no, ad_soyad, sinif FROM ogrenci_listesi WHERE anket_id=?",
+        (anket_id,)
+    ).fetchall()
+    for o in liste:
+        ogrenci_isimleri[o["ogrenci_no"]] = {
+            "ad": o["ad_soyad"],
+            "sinif": o["sinif"]
+        }
+    
+    return render_template(
+        "ogrenci_cevaplari.html",
+        anket=anket,
+        sorular=sorular,
+        ogrenci_satirlari=ogrenci_satirlari,
+        ogrenci_isimleri=ogrenci_isimleri
+    )
 
-    liste_metni = request.form.get("liste", "").strip()
-    if not liste_metni:
-        flash("Liste boş.", "hata")
-        return redirect(url_for("anket_duzenle", anket_id=anket_id))
 
-    db.execute("DELETE FROM ogrenci_listesi WHERE anket_id=?", (anket_id,))
+@app.route("/anket/<int:anket_id>/hatirlatma")
+@giris_gerekli
+def hatirlatma(anket_id):
+    db = get_db()
+    anket = db.execute("SELECT * FROM anketler WHERE id=?", (anket_id,)).fetchone()
+    if not anket:
+        return redirect(url_for("panel"))
+    
+    # Doldurmayan öğrenciler
+    doldurmayanlar = db.execute("""
+        SELECT ol.ogrenci_no, ol.ad_soyad, ol.sinif
+        FROM ogrenci_listesi ol
+        LEFT JOIN katilimcilar k ON k.anket_id = ol.anket_id AND k.ogrenci_no = ol.ogrenci_no
+        WHERE ol.anket_id = ? AND k.id IS NULL
+        ORDER BY ol.ogrenci_no
+    """, (anket_id,)).fetchall()
+    
+    dolduranlar = db.execute("""
+        SELECT ol.ogrenci_no, ol.ad_soyad, ol.sinif, k.katilma
+        FROM ogrenci_listesi ol
+        INNER JOIN katilimcilar k ON k.anket_id = ol.anket_id AND k.ogrenci_no = ol.ogrenci_no
+        WHERE ol.anket_id = ?
+        ORDER BY ol.ogrenci_no
+    """, (anket_id,)).fetchall()
+    
+    return render_template(
+        "hatirlatma.html",
+        anket=anket,
+        doldurmayanlar=doldurmayanlar,
+        dolduranlar=dolduranlar
+    )
 
-    satirlar = liste_metni.split("\n")
-    eklenen = 0
-    hatali = 0
-    for satir in satirlar:
-        satir = satir.strip()
-        if not satir:
-            continue
-        if ";" in satir:
-            parcalar = satir.split(";")
-        elif "," in satir:
-            parcalar = satir.split(",")
-        elif "\t" in satir:
-            parcalar = satir.split("\t")
+
+@app.route("/karsilastir", methods=["GET", "POST"])
+@giris_gerekli
+def karsilastir():
+    db = get_db()
+    anketler = db.execute(
+        "SELECT id, baslik, kod, olusturma FROM anketler WHERE arsivli=0 ORDER BY id DESC"
+    ).fetchall()
+    
+    sonuc = None
+    if request.method == "POST":
+        a1 = request.form.get("anket1", "").strip()
+        a2 = request.form.get("anket2", "").strip()
+        if not a1 or not a2 or a1 == a2:
+            flash("Lütfen iki farklı anket seçin.", "hata")
         else:
-            parcalar = [satir]
+            anket1 = db.execute("SELECT * FROM anketler WHERE id=?", (a1,)).fetchone()
+            anket2 = db.execute("SELECT * FROM anketler WHERE id=?", (a2,)).fetchone()
+            
+            if anket1 and anket2:
+                def anket_ozet(aid):
+                    katilimci = db.execute(
+                        "SELECT COUNT(*) FROM katilimcilar WHERE anket_id=?", (aid,)
+                    ).fetchone()[0]
+                    toplam = db.execute(
+                        "SELECT COUNT(*) FROM ogrenci_listesi WHERE anket_id=?", (aid,)
+                    ).fetchone()[0]
+                    sorular = db.execute(
+                        "SELECT * FROM sorular WHERE anket_id=? ORDER BY sira", (aid,)
+                    ).fetchall()
+                    oran = round(katilimci * 100 / toplam, 1) if toplam > 0 else 0
+                    return {
+                        "anket": db.execute("SELECT * FROM anketler WHERE id=?", (aid,)).fetchone(),
+                        "katilimci": katilimci,
+                        "toplam": toplam,
+                        "oran": oran,
+                        "sorular": sorular
+                    }
+                
+                ozet1 = anket_ozet(a1)
+                ozet2 = anket_ozet(a2)
+                
+                # Ortak soru metinlerini bul
+                ortak_sorular = []
+                soru1_map = {s["metin"]: s for s in ozet1["sorular"]}
+                for s2 in ozet2["sorular"]:
+                    if s2["metin"] in soru1_map:
+                        s1 = soru1_map[s2["metin"]]
+                        # Her iki anketin cevap dağılımını al
+                        def dagilim(aid, sid, secenekler_str):
+                            if not secenekler_str:
+                                return {}
+                            secenekler = [x.strip() for x in secenekler_str.split("\n") if x.strip()]
+                            sayilar = {sec: 0 for sec in secenekler}
+                            cevaplar = db.execute(
+                                "SELECT cevap FROM cevaplar WHERE anket_id=? AND soru_id=?",
+                                (aid, sid)
+                            ).fetchall()
+                            for c in cevaplar:
+                                if c["cevap"] in sayilar:
+                                    sayilar[c["cevap"]] += 1
+                            toplam = sum(sayilar.values()) or 1
+                            return {k: round(v * 100 / toplam, 1) for k, v in sayilar.items()}
+                        
+                        ortak_sorular.append({
+                            "metin": s1["metin"],
+                            "d1": dagilim(a1, s1["id"], s1["secenekler"]),
+                            "d2": dagilim(a2, s2["id"], s2["secenekler"])
+                        })
+                
+                sonuc = {
+                    "ozet1": ozet1,
+                    "ozet2": ozet2,
+                    "ortak_sorular": ortak_sorular
+                }
+    
+    return render_template(
+        "karsilastir.html",
+        anketler=anketler,
+        sonuc=sonuc
+    )
 
-        if len(parcalar) < 2:
-            hatali += 1
-            continue
-        no = parcalar[0].strip()
-        ad = parcalar[1].strip()
-        if not no or not ad:
-            hatali += 1
-            continue
-        try:
-            db.execute(
-                "INSERT INTO ogrenci_listesi (anket_id, ogrenci_no, ad_soyad) VALUES (?,?,?)",
-                (anket_id, no, ad),
-            )
-            eklenen += 1
-        except sqlite3.IntegrityError:
-            hatali += 1
-    db.commit()
-    flash(f"{eklenen} öğrenci yüklendi." + (f" {hatali} satır atlandı." if hatali else ""), "basari")
-    return redirect(url_for("anket_duzenle", anket_id=anket_id))
 
+@app.route("/anket/<int:anket_id>/katilim-listesi-2")
+@giris_gerekli
+def katilim_listesi_2(anket_id):
+    return redirect(url_for("katilim_listesi", anket_id=anket_id))
 
 @app.route("/anket/<int:anket_id>/ogrenci-listesi")
 @giris_gerekli
