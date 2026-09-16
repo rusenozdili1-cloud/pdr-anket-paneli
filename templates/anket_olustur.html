@@ -15,6 +15,16 @@
     <label>Açıklama (opsiyonel)</label>
     <textarea name="aciklama" placeholder="Öğrencilere gösterilecek kısa açıklama..."></textarea>
 
+    <label>Etiket *</label>
+    <select name="etiket" required>
+      {% for key, e in etiketler.items() %}
+        <option value="{{ key }}" {% if key == 'diger' %}selected{% endif %}>{{ e.ad }}</option>
+      {% endfor %}
+    </select>
+    <small style="color: #6b7280; font-size: 12px; display: block; margin-bottom: 16px;">
+      Etiketler panelde filtreleme için kullanılır.
+    </small>
+
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
       <div>
         <label>Başlangıç Tarihi (opsiyonel)</label>
