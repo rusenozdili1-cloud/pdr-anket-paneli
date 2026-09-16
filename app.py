@@ -635,11 +635,66 @@ def sonuclar(anket_id):
                 "cevaplar": cevap_listesi
             })
 
+    katilim_orani = round(katilimci_sayisi * 100 / toplam_ogrenci, 1) if toplam_ogrenci > 0 else 0
+
     return render_template(
         "sonuclar.html", anket=anket, veriler=veriler,
-        katilimci_sayisi=katilimci_sayisi, toplam_ogrenci=toplam_ogrenci
+        katilimci_sayisi=katilimci_sayisi, toplam_ogrenci=toplam_ogrenci,
+        katilim_orani=katilim_orani
     )
 
+
+@app.route("/anket/<int:anket_id>/rapor")
+@giris_gerekli
+def rapor(anket_id):
+    db = get_db()
+    anket = db.execute("SELECT * FROM anketler WHERE id=?", (anket_id,)).fetchone()
+    if not anket:
+        return redirect(url_for("panel"))
+    sorular = db.execute(
+        "SELECT * FROM sorular WHERE anket_id=? ORDER BY sira", (anket_id,)
+    ).fetchall()
+    katilimci_sayisi = db.execute(
+        "SELECT COUNT(*) FROM katilimcilar WHERE anket_id=?", (anket_id,)
+    ).fetchone()[0]
+    toplam_ogrenci = db.execute(
+        "SELECT COUNT(*) FROM ogrenci_listesi WHERE anket_id=?", (anket_id,)
+    ).fetchone()[0]
+
+    veriler = []
+    for s in sorular:
+        cevaplar = db.execute(
+            "SELECT cevap FROM cevaplar WHERE anket_id=? AND soru_id=?",
+            (anket_id, s["id"]),
+        ).fetchall()
+        cevap_listesi = [c["cevap"] for c in cevaplar if c["cevap"] is not None]
+        if s["tip"] in ("coktan", "likert") and s["secenekler"]:
+            secenekler = [x.strip() for x in s["secenekler"].split("\n") if x.strip()]
+            sayilar = {sec: 0 for sec in secenekler}
+            for c in cevap_listesi:
+                if c in sayilar:
+                    sayilar[c] += 1
+            toplam = sum(sayilar.values()) or 1
+            yuzdeler = {k: round(v * 100 / toplam, 1) for k, v in sayilar.items()}
+            veriler.append({
+                "soru": s, "tip": "secenekli",
+                "sayilar": sayilar, "yuzdeler": yuzdeler,
+                "toplam": toplam
+            })
+        else:
+            veriler.append({
+                "soru": s, "tip": "metin",
+                "cevaplar": cevap_listesi
+            })
+
+    katilim_orani = round(katilimci_sayisi * 100 / toplam_ogrenci, 1) if toplam_ogrenci > 0 else 0
+
+    return render_template(
+        "rapor.html", anket=anket, veriler=veriler,
+        katilimci_sayisi=katilimci_sayisi, toplam_ogrenci=toplam_ogrenci,
+        katilim_orani=katilim_orani,
+        tarih=datetime.now().strftime("%d.%m.%Y %H:%M")
+    )
 
 @app.route("/anket/<int:anket_id>/katilim-listesi")
 @giris_gerekli
