@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block baslik %}Hatırlatma — {{ anket.baslik }}{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>🔔 Hatırlatma Listesi</h1>
+  <a href="{{ url_for('sonuclar', anket_id=anket.id) }}" class="btn">← Sonuçlar</a>
+</div>
+
+<p class="anket-aciklama">{{ anket.baslik }}</p>
+
+<div class="ozet-kutu">
+  <div class="ozet-item">
+    <span class="ozet-sayi">{{ dolduranlar|length }}</span>
+    <span class="ozet-etiket">Dolduran</span>
+  </div>
+  <div class="ozet-item">
+    <span class="ozet-sayi">{{ doldurmayanlar|length }}</span>
+    <span class="ozet-etiket">Doldurmayan</span>
+  </div>
+</div>
+
+<!-- Doldurmayanlar -->
+<h3 style="margin-top: 30px;">⏳ Doldurmayan Öğrenciler ({{ doldurmayanlar|length }})</h3>
+
+{% if doldurmayanlar %}
+  <table class="tablo">
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Ad Soyad</th>
+        <th>Sınıf</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in doldurmayanlar %}
+        <tr>
+          <td><strong>{{ o.ogrenci_no }}</strong></td>
+          <td>{{ o.ad_soyad }}</td>
+          <td>{{ o.sinif or '-' }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="form-kart" style="margin-top: 24px;">
+    <h3>📋 Kopyalanabilir Liste (WhatsApp / E-posta için)</h3>
+    <p style="font-size: 13px; color: #6b7280; margin-bottom: 12px;">
+      Aşağıdaki listeyi kopyalayıp velilere gönderebilirsiniz.
+    </p>
+    <textarea id="mesaj" rows="10" readonly>Sayın Veliler, öğrenciniz henüz "{{ anket.baslik }}" anketini doldurmamıştır. Lütfen en kısa sürede doldurmasını sağlayınız.
+
+Anket Kodu: {{ anket.kod }}
+Giriş Adresi: {{ request.url_root }}ogrenci
+
+Doldurmayan Öğrenciler:
+{% for o in doldurmayanlar %}{{ o.sinif or '' }} - {{ o.ogrenci_no }} - {{ o.ad_soyad }}
+{% endfor %}</textarea>
+    <button type="button" class="btn birincil tam" onclick="metniKopyala()">📋 Listeyi Kopyala</button>
+  </div>
+{% else %}
+  <div class="bos-durum">
+    <p>🎉 Tüm öğrenciler anketi doldurdu!</p>
+  </div>
+{% endif %}
+
+<!-- Dolduranlar -->
+<h3 style="margin-top: 30px;">✅ Dolduran Öğrenciler ({{ dolduranlar|length }})</h3>
+
+{% if dolduranlar %}
+  <table class="tablo">
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Ad Soyad</th>
+        <th>Sınıf</th>
+        <th>Katılma</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in dolduranlar %}
+        <tr>
+          <td><strong>{{ o.ogrenci_no }}</strong></td>
+          <td>{{ o.ad_soyad }}</td>
+          <td>{{ o.sinif or '-' }}</td>
+          <td><small>{{ o.katilma[:16] if o.katilma else '-' }}</small></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="bos-durum">
+    <p>Henüz kimse doldurmadı.</p>
+  </div>
+{% endif %}
+
+<script>
+function metniKopyala() {
+  var t = document.getElementById('mesaj');
+  t.select();
+  t.setSelectionRange(0, 99999);
+  try {
+    document.execCommand('copy');
+    alert('Liste kopyalandı! WhatsApp veya e-postaya yapıştırabilirsiniz.');
+  } catch (err) {
+    alert('Kopyalama başarısız oldu. Lütfen elle seçip kopyalayın.');
+  }
+}
+</script>
+
+{% endblock %}
