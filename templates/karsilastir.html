@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block baslik %}Anket Karşılaştır{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>📊 Anket Karşılaştır</h1>
+  <a href="{{ url_for('panel') }}" class="btn">← Anketler</a>
+</div>
+
+<div class="form-kart">
+  <h3>Karşılaştırılacak İki Anketi Seçin</h3>
+  <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px;">
+    Aynı soruları içeren iki anket seçin (örn. aynı anketin farklı tarihlerdeki uygulamaları).
+    Sadece <strong>ortak sorular</strong> karşılaştırılır.
+  </p>
+  <form method="post">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div>
+        <label>1. Anket</label>
+        <select name="anket1" required>
+          <option value="">Seçin...</option>
+          {% for a in anketler %}
+            <option value="{{ a.id }}">{{ a.baslik }} ({{ a.kod }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>2. Anket</label>
+        <select name="anket2" required>
+          <option value="">Seçin...</option>
+          {% for a in anketler %}
+            <option value="{{ a.id }}">{{ a.baslik }} ({{ a.kod }})</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <button type="submit" class="btn birincil tam">📊 Karşılaştır</button>
+  </form>
+</div>
+
+{% if sonuc %}
+  <h2 style="color: #1e3a8a; margin-top: 30px;">📈 Karşılaştırma Sonucu</h2>
+
+  <div class="ozet-kutu" style="grid-template-columns: 1fr 1fr;">
+    <div class="ozet-item">
+      <h3 style="color: #1e3a8a; font-size: 14px;">{{ sonuc.ozet1.anket.baslik }}</h3>
+      <span class="ozet-sayi">{{ sonuc.ozet1.katilimci }}</span>
+      <span class="ozet-etiket">Katılımcı ({{ sonuc.ozet1.oran }}%)</span>
+      <p style="font-size: 11px; color: #6b7280; margin-top: 6px;">{{ sonuc.ozet1.anket.olusturma[:10] }}</p>
+    </div>
+    <div class="ozet-item">
+      <h3 style="color: #1e3a8a; font-size: 14px;">{{ sonuc.ozet2.anket.baslik }}</h3>
+      <span class="ozet-sayi">{{ sonuc.ozet2.katilimci }}</span>
+      <span class="ozet-etiket">Katılımcı ({{ sonuc.ozet2.oran }}%)</span>
+      <p style="font-size: 11px; color: #6b7280; margin-top: 6px;">{{ sonuc.ozet2.anket.olusturma[:10] }}</p>
+    </div>
+  </div>
+
+  {% if sonuc.ortak_sorular %}
+    <h3 style="margin-top: 30px;">📋 Ortak Sorular ({{ sonuc.ortak_sorular|length }})</h3>
+
+    {% for os in sonuc.ortak_sorular %}
+      <div class="sonuc-kart">
+        <h3>{{ os.metin }}</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px;">
+          <div>
+            <h4 style="color: #1e3a8a; font-size: 13px; margin-bottom: 10px;">1. Anket</h4>
+            {% for sec, yuzde in os.d1.items() %}
+              <div class="cubuk-satir">
+                <div class="cubuk-etiket">{{ sec }}</div>
+                <div class="cubuk-dis"><div class="cubuk" style="width: {{ yuzde }}%;"></div></div>
+                <div class="cubuk-sayi">{{ yuzde }}%</div>
+              </div>
+            {% endfor %}
+            {% if not os.d1 %}
+              <p class="bos-not">Cevap yok.</p>
+            {% endif %}
+          </div>
+          <div>
+            <h4 style="color: #1e3a8a; font-size: 13px; margin-bottom: 10px;">2. Anket</h4>
+            {% for sec, yuzde in os.d2.items() %}
+              <div class="cubuk-satir">
+                <div class="cubuk-etiket">{{ sec }}</div>
+                <div class="cubuk-dis"><div class="cubuk" style="width: {{ yuzde }}%;"></div></div>
+                <div class="cubuk-sayi">{{ yuzde }}%</div>
+              </div>
+            {% endfor %}
+            {% if not os.d2 %}
+              <p class="bos-not">Cevap yok.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="bos-durum" style="margin-top: 20px;">
+      <p>İki anket arasında <strong>ortak soru bulunamadı</strong>.</p>
+      <p style="font-size: 12px;">Karşılaştırma için soruların birebir aynı metne sahip olması gerekir.</p>
+    </div>
+  {% endif %}
+{% endif %}
+
+<style>
+@media (max-width: 700px) {
+  .ozet-kutu[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  .sonuc-kart > div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+</style>
+
+{% endblock %}
