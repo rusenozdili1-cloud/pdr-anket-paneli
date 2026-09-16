@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Veli Onam Formu — PDR Anket</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: #1f2937;
+  padding: 40px;
+  line-height: 1.7;
+  background: white;
+}
+.kap { max-width: 800px; margin: 0 auto; }
+.ust {
+  border-bottom: 3px solid #1e3a8a;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.ust h1 { color: #1e3a8a; font-size: 22px; }
+.ust .tarih { font-size: 12px; color: #6b7280; }
+h2 {
+  font-size: 18px;
+  color: #1e3a8a;
+  margin: 24px 0 12px;
+  text-align: center;
+}
+h3 {
+  font-size: 15px;
+  color: #374151;
+  margin: 18px 0 8px;
+}
+p { margin-bottom: 10px; font-size: 14px; }
+ul { margin: 10px 0 10px 24px; font-size: 14px; }
+ul li { margin-bottom: 5px; }
+.vurgu {
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 16px 0;
+  font-size: 13px;
+}
+.onay-kutu {
+  border: 2px solid #1e3a8a;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 30px;
+  background: #f9fafb;
+}
+.onay-kutu h3 { color: #1e3a8a; margin-top: 0; }
+.imza-alani {
+  margin-top: 40px;
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+}
+.imza-kutu {
+  flex: 1;
+  border-top: 1px solid #1f2937;
+  padding-top: 8px;
+  text-align: center;
+  font-size: 13px;
+  color: #4b5563;
+  margin-top: 60px;
+}
+.yazdir-bar {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 100;
+}
+.btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-block;
+}
+.btn-yazdir { background: #1e3a8a; color: white; }
+.btn-kapat { background: #e5e7eb; color: #1f2937; }
+@media print {
+  body { padding: 0; }
+  .yazdir-bar { display: none !important; }
+  @page { margin: 15mm; }
+}
+</style>
+</head>
+<body>
+
+<div class="yazdir-bar">
+  <button class="btn btn-yazdir" onclick="window.print()">🖨️ Yazdır / PDF Kaydet</button>
+  <a class="btn btn-kapat" href="{{ url_for('ogrenci_giris') }}">← Geri</a>
+</div>
+
+<div class="kap">
+
+  <div class="ust">
+    <div>
+      <h1>📋 PDR Anket Sistemi — Veli Onam Formu</h1>
+      <p style="font-size: 13px; color: #6b7280; margin: 0;">Rehberlik ve Psikolojik Danışma Servisi</p>
+    </div>
+    <div class="tarih">{{ tarih }}</div>
+  </div>
+
+  <h2>VELİ BİLGİLENDİRME VE ONAM FORMU</h2>
+
+  <p>Sayın Veli,</p>
+  <p>
+    Okulumuz Rehberlik ve Psikolojik Danışma Servisi tarafından yürütülen anket çalışmaları kapsamında,
+    çocuğunuzun bazı anketlere katılması planlanmaktadır. Bu form, çocuğunuzun anketlere katılımı için
+    <strong>veli onamınızı</strong> almak amacıyla hazırlanmıştır.
+  </p>
+
+  <h3>1. Anketin Amacı</h3>
+  <p>
+    Anketler; öğrencilerin akran zorbalığı, siber zorbalık, sınav kaygısı, okul iklimi gibi konulardaki
+    durumlarını belirlemek ve rehberlik hizmetlerinin planlanmasına katkı sağlamak amacıyla yapılmaktadır.
+  </p>
+
+  <h3>2. Anketin İçeriği</h3>
+  <ul>
+    <li>Öğrencinin okul ortamına ilişkin görüşleri</li>
+    <li>Akran ilişkileri ve zorbalık deneyimleri</li>
+    <li>Sınav kaygısı düzeyi</li>
+    <li>Kariyer ilgi alanları</li>
+    <li>Rehberlik ihtiyaçları</li>
+  </ul>
+
+  <h3>3. Verilerin Gizliliği</h3>
+  <div class="vurgu">
+    <strong>🔒 Gizlilik Taahhüdü:</strong>
+    <ul style="margin: 8px 0 0 20px;">
+      <li>Anket cevapları <strong>anonim</strong> olarak kaydedilir.</li>
+      <li>Çocuğunuzun adı ve numarası sadece <strong>katılım kontrolü</strong> için kullanılır.</li>
+      <li>Cevaplar isimle <strong>eşleştirilmez</strong>.</li>
+      <li>Sonuçlar sadece rehberlik servisi tarafından görülür.</li>
+      <li>Kişisel veriler KVKK kapsamında korunur.</li>
+    </ul>
+  </div>
+
+  <h3>4. Katılımın Gönüllülüğü</h3>
+  <p>
+    Çocuğunuzun ankete katılımı <strong>gönüllülük esasına</strong> dayanır. İstediğiniz zaman
+    çocuğunuzun katılımını geri çekebilirsiniz.
+  </p>
+
+  <h3>5. Veli Onamı</h3>
+  <div class="onay-kutu">
+    <h3>✍️ ONAM BEYANI</h3>
+    <p>
+      Yukarıdaki bilgileri okudum ve anladım. Çocuğumun aşağıda belirtilen anket çalışmalarına
+      katılmasına <strong>gönüllü olarak izin veriyorum</strong>.
+    </p>
+    <p style="margin-top: 14px;">
+      <strong>Öğrenci Adı Soyadı:</strong> ______________________________________
+    </p>
+    <p>
+      <strong>Sınıfı / No:</strong> ______________________________________
+    </p>
+    <p>
+      <strong>Veli Adı Soyadı:</strong> ______________________________________
+    </p>
+    <p>
+      <strong>Telefon:</strong> ______________________________________
+    </p>
+    <p style="margin-top: 14px;">
+      <strong>Tarih:</strong> ____ / ____ / 20____
+    </p>
+  </div>
+
+  <div class="imza-alani">
+    <div class="imza-kutu">
+      Veli İmzası
+    </div>
+    <div class="imza-kutu">
+      Rehberlik Öğretmeni<br>
+      <span style="font-size: 11px; color: #9ca3af;">(İmza / Kaşe)</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
