@@ -5,7 +5,8 @@
 <div class="baslik-satir">
   <h1>📊 {{ anket.baslik }} — Sonuçlar</h1>
   <div>
-    <a href="{{ url_for('sonuclar_csv', anket_id=anket.id) }}" class="btn birincil">⬇️ CSV İndir</a>
+    <a href="{{ url_for('rapor', anket_id=anket.id) }}" class="btn birincil">🖨️ Rapor</a>
+    <a href="{{ url_for('sonuclar_csv', anket_id=anket.id) }}" class="btn">⬇️ CSV</a>
     <a href="{{ url_for('panel') }}" class="btn">← Anketler</a>
   </div>
 </div>
@@ -16,12 +17,16 @@
     <span class="ozet-etiket">Katılımcı</span>
   </div>
   <div class="ozet-item">
-    <span class="ozet-sayi">{{ veriler|length }}</span>
-    <span class="ozet-etiket">Soru</span>
+    <span class="ozet-sayi">{{ toplam_ogrenci }}</span>
+    <span class="ozet-etiket">Toplam Öğrenci</span>
   </div>
   <div class="ozet-item">
-    <span class="ozet-sayi">{{ anket.kod }}</span>
-    <span class="ozet-etiket">Anket Kodu</span>
+    <span class="ozet-sayi">{{ katilim_orani }}%</span>
+    <span class="ozet-etiket">Katılım Oranı</span>
+  </div>
+  <div class="ozet-item">
+    <span class="ozet-sayi">{{ veriler|length }}</span>
+    <span class="ozet-etiket">Soru</span>
   </div>
 </div>
 
@@ -37,18 +42,56 @@
       <span class="etiket gri">{{ v.soru.tip }}</span>
 
       {% if v.tip == 'secenekli' %}
-        <div class="grafik">
-          {% for sec, sayi in v.sayilar.items() %}
-            <div class="cubuk-satir">
-              <div class="cubuk-etiket">{{ sec }}</div>
-              <div class="cubuk-dis">
-                <div class="cubuk" style="width: {{ v.yuzdeler[sec] }}%;"></div>
+        <div class="grafik-kap">
+          <div class="grafik-sol">
+            <canvas id="grafik_{{ v.soru.id }}"></canvas>
+          </div>
+          <div class="grafik-sag">
+            {% for sec, sayi in v.sayilar.items() %}
+              <div class="cubuk-satir">
+                <div class="cubuk-etiket">{{ sec }}</div>
+                <div class="cubuk-dis">
+                  <div class="cubuk" style="width: {{ v.yuzdeler[sec] }}%;"></div>
+                </div>
+                <div class="cubuk-sayi">{{ sayi }} ({{ v.yuzdeler[sec] }}%)</div>
               </div>
-              <div class="cubuk-sayi">{{ sayi }} ({{ v.yuzdeler[sec] }}%)</div>
-            </div>
-          {% endfor %}
+            {% endfor %}
+            <p class="toplam-not">Toplam cevap: <strong>{{ v.toplam }}</strong></p>
+          </div>
         </div>
-        <p class="toplam-not">Toplam cevap: <strong>{{ v.toplam }}</strong></p>
+
+        <script>
+        (function() {
+          var ctx = document.getElementById('grafik_{{ v.soru.id }}');
+          if (!ctx) return;
+          new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: {{ v.sayilar.keys()|list|tojson }},
+              datasets: [{
+                data: {{ v.sayilar.values()|list|tojson }},
+                backgroundColor: [
+                  '#1e3a8a', '#3b82f6', '#60a5fa', '#93c5fd',
+                  '#f59e0b', '#ef4444', '#10b981', '#8b5cf6',
+                  '#ec4899', '#14b8a6'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: { font: { size: 12 }, padding: 10 }
+                }
+              }
+            }
+          });
+        })();
+        </script>
 
       {% else %}
         <div class="metin-cevaplar">
