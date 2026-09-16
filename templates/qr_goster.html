@@ -1,1 +1,121 @@
 
+{% extends "base.html" %}
+{% block baslik %}QR Kod — {{ anket.baslik }}{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>📱 QR Kod ile Anket Girişi</h1>
+  <a href="{{ url_for('anket_duzenle', anket_id=anket.id) }}" class="btn">← Ankete Dön</a>
+</div>
+
+<div class="qr-kap">
+  <h2>{{ anket.baslik }}</h2>
+  <div class="kod-buyuk" style="margin: 20px auto;">{{ anket.kod }}</div>
+
+  {% if qr %}
+    <div class="qr-kutu">
+      <img src="data:image/png;base64,{{ qr }}" alt="QR Kod" class="qr-img">
+    </div>
+    <p class="qr-not">
+      <strong>Öğrenciler bu QR kodu telefon kamerasıyla okutup ankete ulaşabilir.</strong>
+    </p>
+  {% else %}
+    <div class="uyari hata">
+      QR kod oluşturulamadı. Lütfen <code>requirements.txt</code> içinde <code>qrcode[pil]</code> olduğundan emin olun.
+    </div>
+  {% endif %}
+
+  <div class="qr-link-kutu">
+    <span class="etiket-baslik">Öğrenci Giriş Adresi</span>
+    <div class="qr-link">{{ giris_url }}</div>
+  </div>
+
+  <div class="qr-adimlar">
+    <h3>📋 Öğrencilere Nasıl Duyurulur?</h3>
+    <ol>
+      <li>Bu QR kodu yazdırıp sınıfa asın veya tahtaya yansıtın.</li>
+      <li>Öğrenciler telefon kamerasıyla QR'ı okutsun.</li>
+      <li>Açılan sayfada <strong>{{ anket.kod }}</strong> kodunu ve okul numaralarını girsinler.</li>
+      <li>Anketi doldurup göndersinler.</li>
+    </ol>
+  </div>
+
+  <div style="margin-top: 24px; text-align: center;">
+    <button onclick="window.print()" class="btn birincil">🖨️ Yazdır</button>
+    <a href="{{ url_for('anket_duzenle', anket_id=anket.id) }}" class="btn">← Ankete Dön</a>
+  </div>
+</div>
+
+<style>
+.qr-kap {
+  max-width: 700px;
+  margin: 0 auto;
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  text-align: center;
+}
+.qr-kap h2 {
+  color: #1e3a8a;
+  margin-bottom: 20px;
+  font-size: 22px;
+}
+.qr-kutu {
+  background: #f9fafb;
+  padding: 30px;
+  border-radius: 12px;
+  display: inline-block;
+  margin: 20px 0;
+  border: 2px solid #e5e7eb;
+}
+.qr-img {
+  width: 300px;
+  height: 300px;
+  display: block;
+}
+.qr-not {
+  color: #4b5563;
+  font-size: 15px;
+  margin-bottom: 20px;
+}
+.qr-link-kutu {
+  background: #f3f4f6;
+  padding: 16px;
+  border-radius: 8px;
+  margin: 20px 0;
+  text-align: left;
+}
+.qr-link {
+  font-family: monospace;
+  font-size: 14px;
+  color: #1e3a8a;
+  word-break: break-all;
+  margin-top: 6px;
+}
+.qr-adimlar {
+  background: #eff6ff;
+  padding: 20px 24px;
+  border-radius: 12px;
+  text-align: left;
+  margin-top: 20px;
+  border-left: 4px solid #3b82f6;
+}
+.qr-adimlar h3 {
+  color: #1e3a8a;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+.qr-adimlar ol {
+  padding-left: 20px;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.8;
+}
+@media print {
+  .ust, .alt, .baslik-satir, .qr-adimlar, button, .btn { display: none !important; }
+  .qr-kap { box-shadow: none; padding: 0; }
+}
+</style>
+
+{% endblock %}
