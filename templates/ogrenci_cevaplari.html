@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block baslik %}Öğrenci Cevapları — {{ anket.baslik }}{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>👤 Öğrenci Cevapları</h1>
+  <a href="{{ url_for('sonuclar', anket_id=anket.id) }}" class="btn">← Sonuçlar</a>
+</div>
+
+<p class="anket-aciklama">
+  {{ anket.baslik }} — <strong>{{ ogrenci_satirlari|length }}</strong> katılımcı
+</p>
+
+<div class="uyari-bilgi" style="margin-bottom: 20px;">
+  <strong>🔒 Gizlilik:</strong> Bu sayfada öğrencilerin cevapları <strong>numara ile</strong> eşleştirilmiştir.
+  İsimler sadece listede görünür, cevaplarla doğrudan bağlantılı değildir.
+  <br><small>Not: Cevaplar anonim kaydedildiği için eşleştirme "katılım sırası" varsayımına dayanır. Yanlış eşleşme olabilir.</small>
+</div>
+
+{% if ogrenci_satirlari %}
+  <div style="overflow-x: auto;">
+    <table class="tablo">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Ad Soyad</th>
+          <th>Sınıf</th>
+          {% for s in sorular %}
+            <th>S{{ s.sira }}</th>
+          {% endfor %}
+          <th>Katılma</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for satir in ogrenci_satirlari %}
+          <tr>
+            <td><strong>{{ satir.no }}</strong></td>
+            <td>{{ ogrenci_isimleri.get(satir.no, {}).get('ad', '-') }}</td>
+            <td>{{ ogrenci_isimleri.get(satir.no, {}).get('sinif', '-') }}</td>
+            {% for c in satir.cevaplar %}
+              <td>{{ c }}</td>
+            {% endfor %}
+            <td><small>{{ satir.katilma[:16] }}</small></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="bos-durum">
+    <p>Henüz kimse bu anketi doldurmadı.</p>
+  </div>
+{% endif %}
+
+{% endblock %}
