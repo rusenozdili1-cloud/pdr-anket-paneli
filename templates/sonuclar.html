@@ -7,6 +7,8 @@
   <div>
     <a href="{{ url_for('rapor', anket_id=anket.id) }}" class="btn birincil">🖨️ Rapor</a>
     <a href="{{ url_for('sonuclar_csv', anket_id=anket.id) }}" class="btn">⬇️ CSV</a>
+    <a href="{{ url_for('ogrenci_cevaplari', anket_id=anket.id) }}" class="btn">👤 Cevaplar</a>
+    <a href="{{ url_for('hatirlatma', anket_id=anket.id) }}" class="btn">🔔 Hatırlatma</a>
     <a href="{{ url_for('panel') }}" class="btn">← Anketler</a>
   </div>
 </div>
