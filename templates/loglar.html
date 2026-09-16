@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block baslik %}Loglar — PDR Panel{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>📜 Denetim Logları</h1>
+  <div>
+    <a href="{{ url_for('guvenlik') }}" class="btn">🔒 Güvenlik</a>
+    <a href="{{ url_for('panel') }}" class="btn">← Anketler</a>
+  </div>
+</div>
+
+<!-- İşlem Logları -->
+<div class="form-kart">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h3 style="margin: 0;">🔧 İşlem Logları ({{ islemler|length }})</h3>
+    <form method="post" action="{{ url_for('loglar_temizle') }}"
+          onsubmit="return confirm('TÜM loglar silinecek. Emin misiniz?');">
+      <button type="submit" class="btn kucuk tehlike">🗑️ Tümünü Temizle</button>
+    </form>
+  </div>
+
+  {% if islemler %}
+    <div style="max-height: 500px; overflow-y: auto;">
+      <table class="tablo">
+        <thead>
+          <tr>
+            <th style="width: 160px;">Tarih</th>
+            <th style="width: 200px;">İşlem</th>
+            <th>Detay</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in islemler %}
+            <tr>
+              <td><small>{{ l.tarih[:19].replace('T', ' ') }}</small></td>
+              <td><strong>{{ l.islem }}</strong></td>
+              <td style="font-size: 13px; color: #4b5563;">{{ l.detay or '-' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="bos-durum"><p>Henüz işlem kaydı yok.</p></div>
+  {% endif %}
+</div>
+
+<!-- Giriş Logları -->
+<div class="form-kart">
+  <h3>🔐 Giriş Logları ({{ girisler|length }})</h3>
+
+  {% if girisler %}
+    <div style="max-height: 400px; overflow-y: auto;">
+      <table class="tablo">
+        <thead>
+          <tr>
+            <th style="width: 160px;">Tarih</th>
+            <th>Kullanıcı</th>
+            <th>IP</th>
+            <th style="width: 130px;">Durum</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for g in girisler %}
+            <tr>
+              <td><small>{{ g.tarih[:19].replace('T', ' ') }}</small></td>
+              <td>{{ g.kullanici or '-' }}</td>
+              <td><code style="font-size: 12px;">{{ g.ip or '-' }}</code></td>
+              <td>
+                {% if g.basarili %}
+                  <span class="etiket yesil">✅ Başarılı</span>
+                {% else %}
+                  <span class="etiket" style="background: #fee2e2; color: #991b1b;">❌ Başarısız</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="bos-durum"><p>Henüz giriş kaydı yok.</p></div>
+  {% endif %}
+</div>
+
+<div class="uyari-bilgi">
+  <strong>ℹ️ Bilgi:</strong> Loglar en son <strong>200 işlem</strong> ve <strong>100 giriş</strong> kaydını gösterir.
+  Daha eski kayıtlar otomatik olarak temizlenir.
+</div>
+
+{% endblock %}
