@@ -8,12 +8,60 @@
     {% if arsiv_modu %}
       <a href="{{ url_for('panel') }}" class="btn">← Aktif Anketler</a>
     {% else %}
-      <a href="{{ url_for('sablonlar') }}" class="btn">📚 Şablonlardan Oluştur</a>
+      <a href="{{ url_for('sablonlar') }}" class="btn">📚 Şablonlar</a>
       <a href="{{ url_for('arsiv') }}" class="btn">🗄️ Arşiv</a>
       <a href="{{ url_for('anket_yeni') }}" class="btn birincil">+ Yeni Anket</a>
     {% endif %}
   </div>
 </div>
+
+{% if not arsiv_modu %}
+<!-- Filtre + Arama -->
+<div class="filtre-kutu">
+  <form method="get" class="filtre-form">
+    <div class="filtre-grup">
+      <label>🔍 Ara</label>
+      <input type="text" name="arama" value="{{ arama }}" placeholder="Başlık, açıklama veya kod...">
+    </div>
+    <div class="filtre-grup">
+      <label>🏷️ Etiket</label>
+      <select name="etiket">
+        <option value="">Tümü</option>
+        {% for key, e in etiketler.items() %}
+          <option value="{{ key }}" {% if secili_etiket == key %}selected{% endif %}>{{ e.ad }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filtre-grup">
+      <label>🔽 Sırala</label>
+      <select name="sirala">
+        <option value="yeni" {% if sirala == 'yeni' %}selected{% endif %}>En yeni</option>
+        <option value="eski" {% if sirala == 'eski' %}selected{% endif %}>En eski</option>
+        <option value="baslik" {% if sirala == 'baslik' %}selected{% endif %}>Başlık (A-Z)</option>
+        <option value="etiket" {% if sirala == 'etiket' %}selected{% endif %}>Etiket</option>
+      </select>
+    </div>
+    <div class="filtre-grup">
+      <button type="submit" class="btn birincil">Filtrele</button>
+      <a href="{{ url_for('panel') }}" class="btn">Temizle</a>
+    </div>
+  </form>
+</div>
+
+<!-- Etiket rozetleri -->
+<div class="etiket-filtre">
+  <a href="{{ url_for('panel') }}" class="etiket-rozet {% if not secili_etiket %}aktif{% endif %}">
+    Tümü ({{ anketler|length }})
+  </a>
+  {% for key, e in etiketler.items() %}
+    <a href="{{ url_for('panel', etiket=key) }}"
+       class="etiket-rozet {% if secili_etiket == key %}aktif{% endif %}"
+       style="border-color: {{ e.renk }}; color: {{ e.renk }};">
+      {{ e.ad }}
+    </a>
+  {% endfor %}
+</div>
+{% endif %}
 
 {% if anketler %}
   <div class="anket-listesi">
@@ -29,6 +77,11 @@
             {% else %}
               <span class="etiket gri">Taslak</span>
             {% endif %}
+            {% if a.etiket and a.etiket in etiketler %}
+              <span class="etiket" style="background: {{ etiketler[a.etiket].renk }}20; color: {{ etiketler[a.etiket].renk }};">
+                {{ etiketler[a.etiket].ad }}
+              </span>
+            {% endif %}
           </div>
         </div>
 
@@ -43,8 +96,8 @@
 
         {% if a.baslangic or a.bitis %}
           <div class="anket-meta" style="font-size: 12px;">
-            {% if a.baslangic %}<span>▶ Başlangıç: {{ a.baslangic[:16] }}</span>{% endif %}
-            {% if a.bitis %}<span>⏹ Bitiş: {{ a.bitis[:16] }}</span>{% endif %}
+            {% if a.baslangic %}<span>▶ {{ a.baslangic[:16] }}</span>{% endif %}
+            {% if a.bitis %}<span>⏹ {{ a.bitis[:16] }}</span>{% endif %}
           </div>
         {% endif %}
 
@@ -60,7 +113,7 @@
             <button type="submit" class="btn kucuk">📋 Kopyala</button>
           </form>
           <form method="post" action="{{ url_for('anket_arsivle', anket_id=a.id) }}" style="display:inline;">
-            <button type="submit" class="btn kucuk">{% if a.arsivli %}📤 Arşivden Çıkar{% else %}🗄️ Arşivle{% endif %}</button>
+            <button type="submit" class="btn kucuk">{% if a.arsivli %}📤 Çıkar{% else %}🗄️ Arşivle{% endif %}</button>
           </form>
           <form method="post" action="{{ url_for('anket_sil', anket_id=a.id) }}" style="display:inline;"
                 onsubmit="return confirm('Bu anketi ve TÜM verilerini silmek istediğinize emin misiniz? Bu işlem GERİ ALINAMAZ.');">
@@ -72,8 +125,13 @@
   </div>
 {% else %}
   <div class="bos-durum">
-    <p>{% if arsiv_modu %}Arşivde anket yok.{% else %}Henüz anket oluşturmadınız.{% endif %}</p>
-    {% if not arsiv_modu %}
+    {% if secili_etiket or arama %}
+      <p>Arama kriterlerine uygun anket bulunamadı.</p>
+      <a href="{{ url_for('panel') }}" class="btn">Filtreyi Temizle</a>
+    {% elif arsiv_modu %}
+      <p>Arşivde anket yok.</p>
+    {% else %}
+      <p>Henüz anket oluşturmadınız.</p>
       <a href="{{ url_for('anket_yeni') }}" class="btn birincil">İlk Anketinizi Oluşturun</a>
       <a href="{{ url_for('sablonlar') }}" class="btn">📚 Hazır Şablonlar</a>
     {% endif %}
