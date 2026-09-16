@@ -15,7 +15,7 @@
   <div>
     <span class="etiket-baslik">Anket Kodu</span>
     <div class="kod-buyuk">{{ anket.kod }}</div>
-    <small>Bu kodu öğrencilerle paylaşın.</small>
+    <small>Öğrencilerle paylaşın.</small>
   </div>
   <div>
     <span class="etiket-baslik">Durum</span>
@@ -26,26 +26,57 @@
     {% endif %}
   </div>
   <div>
-    <span class="etiket-baslik">Öğrenci Listesi</span>
-    <div style="font-size: 22px; font-weight: 700; color: #1e3a8a;">{{ ogrenci_sayisi }} öğrenci</div>
-    <small><a href="{{ url_for('ogrenci_listesi', anket_id=anket.id) }}">Listeyi görüntüle →</a></small>
+    <span class="etiket-baslik">Öğrenci</span>
+    <div style="font-size: 22px; font-weight: 700; color: #1e3a8a;">{{ ogrenci_sayisi }}</div>
+    <small><a href="{{ url_for('ogrenci_listesi', anket_id=anket.id) }}">Listeyi gör →</a></small>
+  </div>
+  <div>
+    <span class="etiket-baslik">QR Kod</span>
+    <a href="{{ url_for('anket_qr', anket_id=anket.id) }}" class="btn kucuk">📱 QR Göster</a>
   </div>
 </div>
 
-<form method="post" action="{{ url_for('anket_yayinla', anket_id=anket.id) }}" style="margin-bottom: 24px;">
-  {% if anket.yayinda %}
-    <button type="submit" class="btn tehlike">⏸ Anketi Kapat</button>
-  {% else %}
-    <button type="submit" class="btn birincil">▶ Anketi Yayınla</button>
-  {% endif %}
-</form>
+<div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
+  <form method="post" action="{{ url_for('anket_yayinla', anket_id=anket.id) }}">
+    {% if anket.yayinda %}
+      <button type="submit" class="btn tehlike">⏸ Anketi Kapat</button>
+    {% else %}
+      <button type="submit" class="btn birincil">▶ Anketi Yayınla</button>
+    {% endif %}
+  </form>
+  <form method="post" action="{{ url_for('anket_kopyala', anket_id=anket.id) }}">
+    <button type="submit" class="btn">📋 Kopyala</button>
+  </form>
+  <a href="{{ url_for('sonuclar', anket_id=anket.id) }}" class="btn">📊 Sonuçlar</a>
+</div>
+
+<!-- Tarih Ayarları -->
+<div class="form-kart">
+  <h3>📅 Tarih Ayarları</h3>
+  <form method="post" action="{{ url_for('tarih_guncelle', anket_id=anket.id) }}">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div>
+        <label>Başlangıç</label>
+        <input type="datetime-local" name="baslangic" value="{{ anket.baslangic or '' }}">
+      </div>
+      <div>
+        <label>Bitiş</label>
+        <input type="datetime-local" name="bitis" value="{{ anket.bitis or '' }}">
+      </div>
+    </div>
+    <button type="submit" class="btn birincil">Tarihleri Kaydet</button>
+    <small style="color: #6b7280; font-size: 12px; display: block; margin-top: 8px;">
+      Boş bırakılırsa: başlangıç = hemen, bitiş = süresiz
+    </small>
+  </form>
+</div>
 
 <!-- Öğrenci Listesi Yükleme -->
 <div class="form-kart">
   <h3>👥 Öğrenci Listesi Yükle</h3>
   <p style="font-size: 13px; color: #6b7280; margin-bottom: 12px;">
-    Her satıra bir öğrenci yazın: <strong>numara;ad soyad</strong> (noktalı virgül veya virgül ile ayırın).<br>
-    Excel'den iki sütunu kopyalayıp buraya yapıştırabilirsiniz. <strong>Yüklenen liste öncekinin yerine geçer.</strong>
+    Her satıra bir öğrenci: <strong>numara;ad soyad</strong><br>
+    Excel'den kopyalayıp yapıştırabilirsiniz. Yüklenen liste öncekinin yerine geçer.
   </p>
   <form method="post" action="{{ url_for('ogrenci_yukle', anket_id=anket.id) }}">
     <textarea name="liste" rows="8" required
@@ -62,7 +93,7 @@
     <select name="tip" id="soru-tipi" onchange="tipDegisti()">
       <option value="coktan">Çoktan Seçmeli</option>
       <option value="likert">Likert (1-5)</option>
-      <option value="metin">Açık Uçlu (Yazılı)</option>
+      <option value="metin">Açık Uçlu</option>
     </select>
 
     <label>Soru Metni *</label>
