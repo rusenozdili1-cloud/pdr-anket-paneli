@@ -45,7 +45,9 @@ body {
 main.kap { padding: 30px 20px; min-height: 70vh; }
 
 h1 { font-size: 24px; margin-bottom: 20px; color: #1e3a8a; }
+h2 { font-size: 20px; color: #1e3a8a; margin-bottom: 16px; }
 h3 { font-size: 17px; color: #1f2937; }
+h4 { font-size: 14px; color: #374151; }
 
 /* Uyarılar */
 .uyari {
@@ -98,7 +100,7 @@ label {
   font-weight: 600;
   color: #374151;
 }
-input[type="text"], input[type="password"], input[type="number"], textarea, select {
+input[type="text"], input[type="password"], input[type="number"], input[type="datetime-local"], textarea, select {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid #d1d5db;
@@ -146,6 +148,7 @@ textarea { min-height: 90px; resize: vertical; }
   box-shadow: 0 2px 10px rgba(0,0,0,0.06);
   border: 1px solid #e5e7eb;
 }
+.anket-kart.arsivli { opacity: 0.75; }
 .anket-ust {
   display: flex;
   justify-content: space-between;
@@ -153,6 +156,7 @@ textarea { min-height: 90px; resize: vertical; }
   gap: 10px;
   margin-bottom: 10px;
 }
+.anket-ust > div { display: flex; gap: 6px; flex-wrap: wrap; }
 .anket-aciklama {
   font-size: 13px;
   color: #6b7280;
@@ -200,7 +204,7 @@ textarea { min-height: 90px; resize: vertical; }
   border: 2px dashed #d1d5db;
   color: #6b7280;
 }
-.bos-durum .btn { margin-top: 16px; }
+.bos-durum .btn { margin-top: 16px; margin-right: 8px; }
 
 /* Alt bilgi */
 .alt {
@@ -504,7 +508,92 @@ textarea { min-height: 90px; resize: vertical; }
 .tablo tbody tr:last-child { border-bottom: none; }
 .tablo tbody tr:hover { background: #f9fafb; }
 
-@media (max-width: 600px) {
+/* Grafik düzeni */
+.grafik-kap {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 30px;
+  align-items: center;
+  margin-top: 20px;
+}
+.grafik-sol {
+  position: relative;
+  height: 250px;
+}
+.grafik-sag {
+  flex: 1;
+}
+
+/* ============================================ */
+/* AŞAMA 4: Filtre + Etiket rozetleri           */
+/* ============================================ */
+
+.filtre-kutu {
+  background: white;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+}
+.filtre-form {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.filtre-grup {
+  flex: 1;
+  min-width: 160px;
+}
+.filtre-grup label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+.filtre-grup input,
+.filtre-grup select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 0;
+}
+
+.etiket-filtre {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.etiket-rozet {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #4b5563;
+  font-size: 13px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.etiket-rozet:hover {
+  background: #f9fafb;
+  transform: translateY(-1px);
+}
+.etiket-rozet.aktif {
+  background: #1e3a8a;
+  color: white !important;
+  border-color: #1e3a8a;
+}
+
+/* Mobil uyum */
+@media (max-width: 700px) {
+  .grafik-kap { grid-template-columns: 1fr; }
+  .grafik-sol { height: 220px; }
   .cubuk-satir {
     grid-template-columns: 100px 1fr 70px;
     font-size: 12px;
@@ -512,4 +601,6 @@ textarea { min-height: 90px; resize: vertical; }
   .bilgi-kutu { flex-direction: column; gap: 16px; }
   .anket-form-kap { padding: 20px 16px; }
   .kod-buyuk { font-size: 22px; letter-spacing: 3px; }
+  .filtre-form { flex-direction: column; }
+  .filtre-grup { width: 100%; }
 }
