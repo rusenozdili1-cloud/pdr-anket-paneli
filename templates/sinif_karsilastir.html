@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block baslik %}Sınıf Karşılaştırma — {{ anket.baslik }}{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>🏫 Sınıf Karşılaştırma</h1>
+  <a href="{{ url_for('sonuclar', anket_id=anket.id) }}" class="btn">← Sonuçlar</a>
+</div>
+
+<p class="anket-aciklama">{{ anket.baslik }}</p>
+
+{% if sinif_verileri %}
+  <!-- Sınıf Özet Tablosu -->
+  <table class="tablo" style="margin-bottom: 30px;">
+    <thead>
+      <tr>
+        <th>Sınıf</th>
+        <th>Katılımcı</th>
+        <th>Toplam</th>
+        <th>Katılım Oranı</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sv in sinif_verileri %}
+        <tr>
+          <td><strong>{{ sv.sinif }}</strong></td>
+          <td>{{ sv.katilimci }}</td>
+          <td>{{ sv.toplam }}</td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="cubuk-dis" style="flex: 1; height: 16px;">
+                <div class="cubuk" style="width: {{ sv.oran }}%;"></div>
+              </div>
+              <strong>{{ sv.oran }}%</strong>
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Soru Bazlı Karşılaştırma -->
+  <h2 style="color: #1e3a8a; margin-top: 30px;">📊 Soru Bazlı Karşılaştırma</h2>
+
+  {% for s in sorular %}
+    {% if s.tip in ('coktan', 'likert') and s.secenekler %}
+      <div class="sonuc-kart">
+        <h3>S{{ s.sira }}. {{ s.metin }}</h3>
+
+        {% for sv in sinif_verileri %}
+          {% if sv.soru_dagilimlari[loop.index0] %}
+            <div style="margin-top: 14px;">
+              <h4 style="font-size: 13px; color: #1e3a8a; margin-bottom: 8px;">
+                {{ sv.sinif }} ({{ sv.katilimci }} öğrenci)
+              </h4>
+              {% for sec, yuzde in sv.soru_dagilimlari[loop.index0].yuzdeler.items() %}
+                <div class="cubuk-satir">
+                  <div class="cubuk-etiket">{{ sec }}</div>
+                  <div class="cubuk-dis"><div class="cubuk" style="width: {{ yuzde }}%;"></div></div>
+                  <div class="cubuk-sayi">{{ yuzde }}%</div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endfor %}
+
+{% else %}
+  <div class="bos-durum">
+    <p>Sınıf bilgisi olan öğrenci yok.</p>
+    <p style="font-size: 13px;">Sınıf karşılaştırma için öğrenci listesinde <strong>3. sütunda sınıf bilgisi</strong> olmalı.</p>
+    <p style="font-size: 12px; color: #9ca3af; margin-top: 10px;">
+      Örnek: <code>123;Ahmet Yılmaz;9-A</code>
+    </p>
+  </div>
+{% endif %}
+
+{% endblock %}
