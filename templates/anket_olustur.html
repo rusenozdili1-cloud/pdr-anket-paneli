@@ -15,8 +15,26 @@
     <label>Açıklama (opsiyonel)</label>
     <textarea name="aciklama" placeholder="Öğrencilere gösterilecek kısa açıklama..."></textarea>
 
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div>
+        <label>Başlangıç Tarihi (opsiyonel)</label>
+        <input type="datetime-local" name="baslangic">
+        <small style="color: #6b7280; font-size: 12px;">Boş bırakılırsa hemen başlar</small>
+      </div>
+      <div>
+        <label>Bitiş Tarihi (opsiyonel)</label>
+        <input type="datetime-local" name="bitis">
+        <small style="color: #6b7280; font-size: 12px;">Boş bırakılırsa süresiz açık kalır</small>
+      </div>
+    </div>
+
     <button type="submit" class="btn birincil tam">Anketi Oluştur ve Soru Ekle →</button>
   </form>
+</div>
+
+<div class="uyari-bilgi">
+  <strong>💡 İpucu:</strong> Her seferinde soru yazmak istemiyorsanız,
+  <a href="{{ url_for('sablonlar') }}">hazır şablonlardan</a> birini kullanabilirsiniz.
 </div>
 
 {% endblock %}
