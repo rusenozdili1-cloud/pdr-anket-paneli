@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block baslik %}Hazır Şablonlar — PDR Panel{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>📚 Hazır Anket Şablonları</h1>
+  <a href="{{ url_for('panel') }}" class="btn">← Anketler</a>
+</div>
+
+<p class="anket-aciklama" style="font-size: 14px; margin-bottom: 24px;">
+  Aşağıdaki şablonlardan birini seçin. Sorular otomatik olarak yüklenecek.
+  Sonra sadece öğrenci listesini yükleyip anketi yayınlayın.
+</p>
+
+<div class="sablon-listesi">
+  {% for key, s in sablonlar.items() %}
+    <div class="sablon-kart">
+      <div class="sablon-baslik">
+        <h3>{{ s.ad }}</h3>
+        <span class="etiket gri">{{ s.sorular|length }} soru</span>
+      </div>
+      <p class="sablon-aciklama">{{ s.aciklama }}</p>
+
+      <details class="sablon-detay">
+        <summary>Soruları önizle</summary>
+        <ol class="sablon-sorular">
+          {% for soru in s.sorular %}
+            <li>
+              <span class="etiket gri" style="font-size: 10px;">{{ soru.tip }}</span>
+              {{ soru.metin }}
+            </li>
+          {% endfor %}
+        </ol>
+      </details>
+
+      <form method="post" action="{{ url_for('anket_sablondan', sablon_key=key) }}"
+            onsubmit="return confirm('Bu şablondan yeni bir anket oluşturulsun mu?');">
+        <button type="submit" class="btn birincil tam">📋 Bu Şablondan Anket Oluştur</button>
+      </form>
+    </div>
+  {% endfor %}
+</div>
+
+<style>
+.sablon-listesi {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+.sablon-kart {
+  background: white;
+  padding: 22px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+}
+.sablon-baslik {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.sablon-baslik h3 {
+  font-size: 16px;
+  color: #1e3a8a;
+  line-height: 1.3;
+}
+.sablon-aciklama {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 14px;
+  flex-grow: 1;
+}
+.sablon-detay {
+  margin-bottom: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: #f9fafb;
+}
+.sablon-detay summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e3a8a;
+  user-select: none;
+}
+.sablon-sorular {
+  margin-top: 12px;
+  padding-left: 18px;
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.7;
+  max-height: 250px;
+  overflow-y: auto;
+}
+.sablon-sorular li {
+  margin-bottom: 8px;
+}
+</style>
+
+{% endblock %}
