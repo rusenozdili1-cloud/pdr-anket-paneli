@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block baslik %}KVKK Aydınlatma Metni{% endblock %}
+{% block icerik %}
+
+<div class="baslik-satir">
+  <h1>📜 KVKK Aydınlatma Metni</h1>
+  <a href="{{ url_for('ogrenci_giris') }}" class="btn">← Anket Girişi</a>
+</div>
+
+<div class="yasal-metin">
+  <h2>6698 Sayılı Kişisel Verilerin Korunması Kanunu Kapsamında Aydınlatma Metni</h2>
+
+  <p><strong>Veri Sorumlusu:</strong> [OKUL ADI] Rehberlik Servisi</p>
+
+  <h3>1. İşlenen Kişisel Veriler</h3>
+  <p>Rehberlik servisimiz tarafından yürütülen anket çalışmaları kapsamında aşağıdaki kişisel veriler işlenmektedir:</p>
+  <ul>
+    <li><strong>Kimlik Verisi:</strong> Ad, soyad, okul numarası</li>
+    <li><strong>İletişim Verisi:</strong> Sınıf bilgisi (isteğe bağlı)</li>
+    <li><strong>Anket Verisi:</strong> Ankete verilen cevaplar (ANONİM olarak kaydedilir)</li>
+  </ul>
+
+  <h3>2. Kişisel Verilerin İşlenme Amaçları</h3>
+  <ul>
+    <li>Öğrencilerin rehberlik ihtiyaçlarını belirlemek</li>
+    <li>Okul iklimi ve öğrenci refahı hakkında veri toplamak</li>
+    <li>Zorbalık, kaygı gibi konularda farkındalık oluşturmak</li>
+    <li>Rehberlik hizmetlerinin planlanması</li>
+  </ul>
+
+  <h3>3. Anonimlik ve Gizlilik</h3>
+  <div class="vurgu-kutu">
+    <p><strong>🔒 ÖNEMLİ:</strong> Anket cevaplarınız <strong>anonim</strong> olarak kaydedilir.
+    Yani "kimin hangi cevabı verdiği" sistem tarafından tutulmaz. Ad ve numaranız sadece
+    <strong>katılım kontrolü</strong> (aynı kişinin ankete birden fazla kez katılmasını engellemek)
+    için kullanılır ve cevaplarınızla eşleştirilmez.</p>
+  </div>
+
+  <h3>4. Kişisel Verilerin Aktarılması</h3>
+  <p>Kişisel verileriniz üçüncü kişilerle paylaşılmaz. Yalnızca okul yönetimi ile özet istatistikler paylaşılabilir.</p>
+
+  <h3>5. Kişisel Verilerin Saklanma Süresi</h3>
+  <p>Anket verileri en fazla <strong>1 eğitim-öğretim yılı</strong> süresince saklanır ve sonrasında silinir.</p>
+
+  <h3>6. İlgili Kişinin Hakları (KVKK Madde 11)</h3>
+  <p>Öğrenci velisi olarak aşağıdaki haklara sahipsiniz:</p>
+  <ul>
+    <li>Kişisel verilerinizin işlenip işlenmediğini öğrenme</li>
+    <li>İşlenmişse buna ilişkin bilgi talep etme</li>
+    <li>İşlenme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme</li>
+    <li>Eksik veya yanlış işlenmişse düzeltilmesini isteme</li>
+    <li>Silinmesini veya yok edilmesini isteme</li>
+  </ul>
+
+  <h3>7. İletişim</h3>
+  <p>KVKK kapsamındaki talepleriniz için okul rehberlik servisi ile iletişime geçebilirsiniz.</p>
+
+  <div class="vurgu-kutu bilgi">
+    <p><strong>ℹ️ Bilgilendirme:</strong> Bu metin örnek olarak hazırlanmıştır.
+    Okulunuzun hukuk danışmanı veya KVKK uzmanı tarafından gözden geçirilmesi önerilir.</p>
+  </div>
+
+  <div style="margin-top: 30px; text-align: center;">
+    <a href="{{ url_for('ogrenci_giris') }}" class="btn birincil">Anket Girişine Dön</a>
+    <a href="{{ url_for('veli_onam') }}" class="btn">Veli Onam Formu</a>
+  </div>
+</div>
+
+{% endblock %}
